@@ -102,7 +102,7 @@ void Scm_Init_vmhack(void)
 }
 "
 
-(define-cproc vm-code-execute (expr env) vm_code_execute)
+(define-cproc vm-code-execute! (expr env) vm_code_execute)
 
 "
 "
