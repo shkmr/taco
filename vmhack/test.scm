@@ -9,7 +9,7 @@
 ;;;
 (define-macro (define-insn-constants)
   (let1 name&codes
-      (map (^[insn] (cons (car insn) (ref (cdr insn)'code)))
+      (map (^[insn] (cons (car insn) (ref (cdr insn) 'code)))
            (class-slot-ref <vm-insn-info> 'all-insns))
     `(begin
        ,@(map (^[n&c] `(define-constant ,(car n&c) ,(cdr n&c)))
