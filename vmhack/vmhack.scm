@@ -1,7 +1,6 @@
 ;;;
 ;;; vmhack
 ;;;
-
 (define-module vmhack
   (use gauche.vm.code)
   (use gauche.vm.insn)
@@ -24,6 +23,9 @@
        )))
 (define-insn-constants)
 
+;;;
+;;; import useful stuff
+;;;
 (define-macro (import-from mod . syms)
   `(begin
      ,@(map (lambda (sym) `(define ,sym (with-module ,mod ,sym)))
@@ -35,5 +37,3 @@
              compiled-code-emit0o!
              compiled-code-emit-RET!)
 ;; EOF
-
-
