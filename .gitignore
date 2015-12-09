@@ -1,0 +1,7 @@
+Makefile
+VERSION
+*~
+*.log
+*.so
+*.o
+*.gpd
