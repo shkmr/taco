@@ -9,13 +9,12 @@
 #include <gauche/prof.h>
 
 /* 
- *   We need priv/builtin-syms.h from Gache build directory.
+ *   FIXME: We include priv/builtin-syms.h from Gache build directory
+ *   to get SCM_SYM_EVAL_BEFORE and SCM_SYM_EVAL_AFTER.
  *
  *   $ ln -s <GAUCHE_BUILD_DIR>/src/gauche .
  *
- *   As the result, this module will get broken whenever this
- *   file gets updated.
- *
+ *   We need to find a portable way to find pointers to these symbols.
  */
 #include \"gauche/priv/builtin-syms.h\"
 
@@ -50,7 +49,7 @@ static ScmObj eval_restore_env(ScmObj *args, int argc, void *data)
  *   Used src/vm.c:Scm_VMEval() as starting point.
  *   Just commented out compiler call.
  */
-/* For now, we only supports a module as the evaluation environment */
+/* For now, we only support a module as the evaluation environment */
 ScmObj vm_code_execute(ScmObj v, ScmObj e)
 {
     int restore_module = SCM_MODULEP(e);
