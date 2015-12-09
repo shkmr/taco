@@ -14,7 +14,7 @@
  *   $ ln -s <GAUCHE_BUILD_DIR>/src/gauche .
  *
  *   As the result, this module will get broken whenever this
- *   file get updated.
+ *   file gets updated.
  *
  */
 #include \"gauche/priv/builtin-syms.h\"
