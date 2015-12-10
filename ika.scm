@@ -1,16 +1,49 @@
 ;;;
-;;;
+;;;  ika : IKAssembler for TACOmpiler
 ;;;
 (define-module ika
   (use gauche.vm.insn)
   (use gauche.vm.code)
   (use vmhack)
-  (export ika->vm-code
+  (export ika/pp
+          ika->vm-code
           vm-dump-code
           vm-code->list
+          sexp->list
+          compile
+          compile-p1
+          compile-p2
+          compile-p3
+          compile-p4
+          compile-p5
           ))
-
 (select-module ika)
+
+;;;
+;;; (not quite) pretty print ika source code
+;;;
+(define (ika/pp prog)
+  (define (ff code level)
+    (let ((sp (make-string level #\space)))
+
+      (define (disp obj) (display sp) (display obj) (newline))
+      (define (wri  obj) (display sp) (write obj) (newline))
+
+      (for-each (lambda (elm)
+                  (cond ((and (pair? elm)
+                              (symbol? (car elm)))
+                         (disp elm))
+                        ((and (pair? elm)
+                              (not (symbol? (car elm))))
+                         (disp "(") 
+                         (ff elm (+ level 4)) 
+                         (disp ")"))
+                        (else
+                         (wri elm))))
+                code)))
+  (display "(") (newline)
+  (ff prog 4)
+  (display ")") (newline))
 ;;;
 ;;; import useful stuff
 ;;;
@@ -19,12 +52,29 @@
      ,@(map (lambda (sym) `(define ,sym (with-module ,mod ,sym)))
             syms)))
 
+(import-from gauche.internal
+             compile
+             compile-p1
+             compile-p2
+             compile-p3
+             compile-p4
+             compile-p5)
+
+(define (sexp->list sexp)
+  (vm-code->list (compile sexp (interaction-environment))))
+
+;;;
+;;; c.f. gauche/vm/insn-core.scm
+;;;
 (define-method vm-insn-code ((info <vm-insn-info>))
   (ref info 'code))
 
 (define-method vm-insn-code ((mnemonic <symbol>))
   (vm-insn-code (vm-find-insn-info mnemonic)))
 
+;;;
+;;;
+;;;
 (define (ika->vm-code ika)
   (let ((ccb (make-compiled-code-builder 0 0 '%toplevel #f #f #f))
         (maxstack 1))
