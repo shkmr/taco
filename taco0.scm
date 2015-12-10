@@ -1,5 +1,5 @@
 ;;;
-;;; taco0 : based of example of lalr.scm
+;;; taco0 : based on example of lalr.scm
 ;;;
 (define-module taco0
   (use srfi-1)
