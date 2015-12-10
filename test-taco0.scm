@@ -1,7 +1,7 @@
 (use gauche.test)
 (use ika)
 
-(test-start "ika")
+(test-start "taco0")
 (use taco0)
 (test-module 'taco0)
 
