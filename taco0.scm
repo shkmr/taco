@@ -8,7 +8,7 @@
 
 (select-module taco0)
 
-(define taco0
+(define taco0-parser
   (lalr-parser
    (expect:    0)
 
@@ -119,7 +119,7 @@
 (define return #f)
 
 (define (compile-taco0)
-  (define (start) (taco0 (make-lexer print) print))
+  (define (start) (taco0-parser (make-lexer print) print))
   (call/cc (lambda (k)
              (set! return k)
              (start))))
