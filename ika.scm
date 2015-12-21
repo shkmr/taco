@@ -23,29 +23,6 @@
 ;;; (not quite) pretty print ika source code
 ;;;
 (define (ika/pp prog)
-  (define (ff code level)
-    (let ((sp (make-string level #\space)))
-
-      (define (disp obj) (display sp) (display obj) (newline))
-      (define (wri  obj) (display sp) (write obj) (newline))
-
-      (for-each (lambda (elm)
-                  (cond ((and (pair? elm)
-                              (symbol? (car elm)))
-                         (disp elm))
-                        ((and (pair? elm)
-                              (not (symbol? (car elm))))
-                         (disp "(") 
-                         (ff elm (+ level 4)) 
-                         (disp ")"))
-                        (else
-                         (wri elm))))
-                code)))
-  (display "(") (newline)
-  (ff prog 4)
-  (display ")") (newline))
-
-(define (ika/pp2 prog)
   (newline)
   (for-each (lambda (n e)
               (format #t "~3,'0d: ~a~%" n e))
