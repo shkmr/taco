@@ -52,6 +52,9 @@ check : all
 	$(GOSH) -I. -I$(srcdir) $(srcdir)/test.scm > test.log
 
 install : all
+	@echo "There is nothing worth to install..."
+
+install-anyway : all
 	$(INSTALL) -m 444 -T $(GAUCHE_PKGINCDIR) $(HEADERS)
 	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR) $(SCMFILES)
 	$(INSTALL) -m 555 -T $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
