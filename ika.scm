@@ -44,6 +44,15 @@
   (display "(") (newline)
   (ff prog 4)
   (display ")") (newline))
+
+(define (ika/pp2 prog)
+  (newline)
+  (for-each (lambda (n e)
+              (format #t "~3,'0d: ~a~%" n e))
+            (iota (length prog))
+            prog))
+
+
 ;;;
 ;;; import useful stuff
 ;;;
@@ -60,31 +69,25 @@
              compile-p4
              compile-p5)
 
-(define (sexp->list sexp)
-  (vm-code->list (compile sexp (interaction-environment))))
+(define (c sexp)
+  (let ((cc (compile sexp (interaction-environment))))
+    (ika/pp2 (vm-code->list cc))
+    (vm-dump-code cc)))
 
-;;;
-;;; c.f. gauche/vm/insn-core.scm
-;;;
-(define-method vm-insn-code ((info <vm-insn-info>))
-  (ref info 'code))
-
-(define-method vm-insn-code ((mnemonic <symbol>))
-  (vm-insn-code (vm-find-insn-info mnemonic)))
 
 ;;;
 ;;;
 ;;;
 (define (ika->vm-code ika)
   (let ((ccb (make-compiled-code-builder 0 0 '%toplevel #f #f #f))
-        (maxstack 1))
+        (maxstack 0))
     (for-each (lambda (stmt)
                 (case (car stmt)
                   ((CONST)
                    (and (= (length stmt) 2)
                         (integer? (cadr stmt))
                         (compiled-code-emit0o! ccb
-                                               (vm-insn-code 'CONST)
+                                               (vm-insn-name->code 'CONST)
                                                (cadr stmt))))
                   ((RET)
                    (compiled-code-emit-RET! ccb))
@@ -92,5 +95,18 @@
               ika)
     (compiled-code-finish-builder ccb maxstack)
     ccb))
+
+#|
+(vm-insn-code 'CONST)
+(vm-insn-name->code 'CONST)
+(vm-insn-code->name 2)
+(c '(+ 1 2))
+(c '(lambda (a b c) (fobar a b c)))
+    
+    
+
+
+
+|#
 
 ;; EOF
