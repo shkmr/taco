@@ -1,4 +1,4 @@
-all :
+all : insn.html
 
 insn.html : make-insn-table.scm
 	gosh make-insn-table.scm > insn.html
