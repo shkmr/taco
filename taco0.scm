@@ -22,45 +22,35 @@
 	     (line)       : (return $1))
 
    ;; --- rules
-   (line     (expr   NEWLINE)        :  $1
+   (line     (expr   NEWLINE)        :  (gen/op001 'RET $1)
              (NEWLINE)               :  #f
 	     (error  NEWLINE)        :  #f)
    
-   (expr     (expr + expr)           : (gen/op2 'NUMADD2 $1 $3)
-	     (expr - expr)           : (gen/op2 'NUMSUB2 $1 $3)
-	     (expr * expr)           : (gen/op2 'NUMMUL2 $1 $3)
-	     (expr / expr)           : (gen/op2 'NUMDIV2 $1 $3)
-	     (- expr (prec: uminus)) : (gen/op1 'NEGATE  $2)
-	     (NUM)                   : (gen/opp 'CONST $1)
+   (expr     (expr + expr)           : (gen/op002 'NUMADD2 $1 $3)
+	     (expr - expr)           : (gen/op002 'NUMSUB2 $1 $3)
+	     (expr * expr)           : (gen/op002 'NUMMUL2 $1 $3)
+	     (expr / expr)           : (gen/op002 'NUMDIV2 $1 $3)
+	     (- expr (prec: uminus)) : (gen/op001 'NEGATE  $2)
+	     (NUM)                   : (gen/op011 'CONST $1)
 	     (LPAREN expr RPAREN)    : $2)
    ))
 
 ;;;
 ;;;   Code emitter
 ;;;
-(define (gen/opp op p1)
-  `((,op ,p1)))
+(define (gen/op011 op r1)
+  `((,op) ,r1))
 
-(define (gen/op1 op r1)
+
+(define (gen/op001 op r1)
   `(,@r1 
     (,op)))
 
-(define (gen/op2 op r1 r2)
+(define (gen/op002 op r1 r2)
   `(,@r1 
     (PUSH) 
     ,@r2 
     (,op)))
-
-(define (gen/call n sym . args)
-  (if (= n (length args))
-      `((PRE-CALL ,n)
-        (
-         ,@(append-map (lambda (arg)
-                         (append arg '((PUSH))))
-                       args)
-         (GREF) ,sym
-         (CALL ,n)))
-      (error "wrong number of argument for CALL")))
 
 ;;;
 ;;;   The lexer

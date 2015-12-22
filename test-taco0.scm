@@ -22,34 +22,45 @@
                              (lambda ()
                                (taco0-compile-string in))))))
 
-(run-test  "1\n"      '((CONST 1)))
-(run-test  "-1\n"     '((CONST 1)
-                        (NEGATE)))
+(run-test  "1\n"      '((CONST) 1
+                        (RET)
+                        ))
+(run-test  "-1\n"     '((CONST) 1
+                        (NEGATE)
+                        (RET)
+                        ))
 (run-test  "+1\n" #f)             ; this is error 
 (run-test  "1 + -2\n"             ; but this is OK
-                      '((CONST 1)
+                      '((CONST) 1
                         (PUSH)
-                        (CONST 2)
+                        (CONST) 2
                         (NEGATE)
-                        (NUMADD2))) 
-(run-test  "1.234\n"   '((CONST 1.234)))
-(run-test  " 1 + 2\n"  '((CONST 1)
+                        (NUMADD2)
+                        (RET)
+                        )) 
+(run-test  "1.234\n"   '((CONST) 1.234
+                         (RET)
+                         ))
+(run-test  " 1 + 2\n"  '((CONST) 1
                          (PUSH)
-                         (CONST 2)
-                         (NUMADD2)))
+                         (CONST) 2
+                         (NUMADD2)
+                         (RET)
+                         ))
 (run-test  " 1   2\n" #f)
-(run-test  "(1 + 2)*(3+4)\n"  '((CONST 1)
-                                (PUSH)
-                                (CONST 2)
-                                (NUMADD2)
-                                (PUSH)
-                                (CONST 3)
-                                (PUSH)
-                                (CONST 4)
-                                (NUMADD2)
-                                (NUMMUL2)))
+(run-test  "(1 + 2)*(3+4)\n" '((CONST) 1
+                               (PUSH)
+                               (CONST) 2
+                               (NUMADD2)
+                               (PUSH)
+                               (CONST) 3
+                               (PUSH)
+                               (CONST) 4
+                               (NUMADD2)
+                               (NUMMUL2)
+                               (RET)
+                               ))
 
 (close-port taco.out)
-
 (test-end :exit-on-failure #t)
 ;; EOF
