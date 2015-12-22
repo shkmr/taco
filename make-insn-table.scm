@@ -3,24 +3,6 @@
 ;;;
 (use gauche.vm.insn)
 
-(define (insn/pp name&info)
-  (let ((name (car name&info))
-        (info (cdr name&info)))
-    (if (not (eq? name (~ info'name)))
-      (error "name does not match: " name (~ info'name)))
-    (print (cond ((~ info'obsoleted) "<tr bgcolor=#aaaaaa>")
-                 ((~ info'combined)  "<tr bgcolor=#aa7777>")
-                 (else "<tr>"))
-           "<td><code>" (~ info'name) "</code>"
-           "<td align=CENTER>" (~ info'obsoleted)
-           "<td align=CENTER>" (~ info'num-params)
-           "<td align=CENTER>" (~ info'alt-num-params)
-           "<td>" (~ info'operand-type)
-           "<td>" (if (~ info'combined) "#t" "#f")
-           "<td>" (~ info'fold-lref)
-           "</tr>")
-    ))
-
 (print "<h1>Gauche VM quick rerefernce</h1>")
 
 (print "\
@@ -50,7 +32,29 @@ See src/code.c src/vminsn.c for details.</p>
 </tr>
 ")
 
-(for-each insn/pp (reverse (class-slot-ref <vm-insn-info> 'all-insns)))
+(define (insn/tr name&info)
+
+  (let ((name (car name&info))
+        (info (cdr name&info)))
+
+    (if (not (eq? name (~ info'name)))
+      (error "name does not match: " name (~ info'name)))
+
+    (print (cond ((~ info'obsoleted) "<tr bgcolor=#aaaaaa>")
+                 ((~ info'combined)  "<tr bgcolor=#aa7777>")
+                 (else               "<tr>"))
+
+           "<td><code>"        (~ info'name) "</code>"
+           "<td align=CENTER>" (~ info'obsoleted)
+           "<td align=CENTER>" (~ info'num-params)
+           "<td align=CENTER>" (~ info'alt-num-params)
+           "<td>"              (~ info'operand-type)
+           "<td>"              (if (~ info'combined) "#t" "#f")
+           "<td>"              (~ info'fold-lref)
+           "</tr>"
+           )
+    ))
+(for-each insn/tr (reverse (class-slot-ref <vm-insn-info> 'all-insns)))
 
 (print "</table>")
 
