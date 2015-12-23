@@ -49,7 +49,7 @@
            (ff (cdr cp) level n))
 
           ;; VM insn.
-          ((pair? (car cp)) 
+          ((pair? (car cp))
            (let ((info (vm-find-insn-info (caar cp))))
              (case (~ info'operand-type)
 
@@ -61,15 +61,38 @@
                 (let ((opcode  (car cp))
                       (operand (cadr cp)))
                   (cond ((is-a? operand <compiled-code>)
-                         (format #t "~va~3,' d ~s ~s~%" level "" n opcode operand)
+                         (format #t "~va~4,' d ~s ~s~%" level "" n opcode operand)
                          (ff (vm-code->list operand) (+ level 4) 0))
                         ((and (pair? operand) (symbol? (car operand)))
                          (format #t "~va~4,' d ~s (~s ~s~%" level "" n opcode (car operand) (cadr operand))
                          (ff (cddr operand) (+ level 4) 0)
                          (format #t "~va     )~%" level ""))
                         (else
-                         (format #t "~va~3,'d ~s ~s~%" level "" n opcode operand))) ; or error?
+                         (error "ika: operand has to be <compiled-code> or ika program, but got " operand)))
                   (ff (cddr cp) level (+ n 2))))
+
+               ((codes)
+                (let ((opcode  (car cp))
+                      (operand (cadr cp)))
+                  (if (not (pair? operand))
+                    (error "ika: operand has to be list of codes, but got " operand))
+                  (cond ((and (pair? (car operand)) (symbol? (caar operand)))
+                         (format #t "~va~4,' d ~s (~%" level "" n opcode)
+                         (for-each (lambda (prog)
+                                     (format #t "~va     (~s ~s~%" level "" (car prog) (cadr prog))
+                                     (ff (cddr prog) (+ level 4) 0)
+                                     (format #t "~va)~%" level ""))
+                                   operand)
+                         (format #t "~va     )~%" level ""))
+
+                        (else
+                         (format #t "~va~4,' d ~s (~%" level "" n opcode)
+                         (for-each (lambda (cc)
+                                     (format #t "~va       ~s~%" level "" cc)
+                                     (if (is-a? cc <compiled-code>)
+                                       (ff (vm-code->list cc) (+ level 4) 0)))
+                                   operand)
+                         (format #t "~va     )~%" level "")))))
 
                ((obj+addr)
                 (let ((opcode (car cp))
@@ -134,6 +157,19 @@
                                (error "operand has to be a <compiled-code> or ika program, but got " code)))
                         (lp (cddr ika) maxstack)))
 
+                     ((codes)
+                      (let ((opcode (~ info' code))
+                            (codes  (cadr ika)))
+                        (if (not (pair? codes))
+                          (error "ika: list of codes required but got " codes))
+                        (compiled-code-emit2o! ccb opcode arg0 arg1
+                                               (map (lambda (code)
+                                                      (if (pair? code)
+                                                        (ika->vm-code code)
+                                                        code))
+                                                    codes))
+                        (lp (cddr ika) maxstack)))
+                     
                      ((obj)
                       (let ((opcode (~ info' code))
                             (obj    (cadr ika)))
@@ -154,7 +190,7 @@
                               (else
                                (error "ika: addr has to be integer or label, but got " addr)))
                         (lp (cddr ika) maxstack)))
-                      
+
                      ((obj+addr)
                       (let ((opcode  (~ info'code))
                             (obj     (cadr ika))
@@ -168,14 +204,14 @@
                               (else
                                (error "ika: addr has to be integer or label, but got " addr)))
                         (lp (cdddr ika) maxstack)))
-                     
+
                      (else
                       (let ((operand (cadr ika)))
                         (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 operand)
                         (lp (cddr ika) maxstack)))
 
                      ))))
-              
+
               (else
                (error "ika: syntax error")))))))
 
@@ -211,6 +247,31 @@
       (if (eq? a 'fobar)
         'yes
         'no)))
+(c '(define (foo n)
+      (define (even? x)
+        (if (= x 0)
+          #t
+          (odd? (- x 1))))
+      (define (odd? x)
+        (if (= x 0)
+          #f
+          (even? (- x 1))))
+      (even? n)))
+
+(define (foo x)
+  (define (even? x)
+    (if (= x 0)
+      #t
+      (odd? (- x 1))))
+  (define (odd? x)
+    (if (= x 0)
+      #f
+      (even? (- x 1))))
+  (even? x))
+
+(foo 11)
+
+
 
 <vm-insn-info>  vm-build-insn
 vm-insn-size
