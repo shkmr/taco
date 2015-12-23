@@ -66,7 +66,7 @@
                ))
 
 (define (a name code)
-  (display "====: ")
+  (display "*****: ")
   (print name)
   (ika/pp code)
   (print "====> ")
