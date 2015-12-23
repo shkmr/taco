@@ -119,7 +119,7 @@
         (labels   '()))
     (let ((ccb (make-compiled-code-builder reqargs optargs name #f #f #f)))
       (let lp ((ika (cddr ika))
-               (maxstack 0))
+               (maxstack 0))  ; how do we set this?
         (cond ((null? ika)
                (compiled-code-finish-builder ccb maxstack)
                ccb)
