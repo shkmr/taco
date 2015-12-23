@@ -10,7 +10,7 @@
   (display " => ")
   (let ((ika (with-input-from-string str compile-taco0)))
     (if ika
-        (ika/pp ika)
+        (ika/pp (append '(%top-level (0 0)) ika))
         (print ika))
     ika))
 

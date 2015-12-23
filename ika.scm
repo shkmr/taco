@@ -9,6 +9,7 @@
           ika->vm-code
           vm-dump-code
           vm-code->list
+          make-identifier
           compile
           compile-p1
           compile-p2
@@ -26,6 +27,7 @@
      ,@(map (lambda (sym) `(define ,sym (with-module ,mod ,sym)))
             syms)))
 (import-from gauche.internal
+             make-identifier
              compile
              compile-p1
              compile-p2
@@ -43,18 +45,27 @@
            (let ((info (vm-find-insn-info (caar code))))
              (case (~ info'operand-type)
                ((none)
-                (format #t "~va~3,'0d: ~a~%" level "" n (car code))
+                (format #t "~va~4,' d ~s~%" level "" n (car code))
                 (ff (cdr code) level (+ n 1)))
+               ((code)
+                (cond ((is-a? (cadr code) <compiled-code>)
+                       (format #t "~va~3,' d ~s ~s~%" level "" n (car code) (cadr code))
+                       (ff (vm-code->list (cadr code)) (+ level 4) 0))
+                      ((and (pair? (cadr code))
+                            (symbol? (caadr code)))
+                       (format #t "~va~4,' d ~s (~s ~s~%" level ""
+                               n (car code) (caadr code) (cadadr code))
+                       (ff (cddadr code) (+ level 4) 0))
+                      (else
+                       (format #t "~va~3,'d ~s ~s~%" level "" n (car code) (cadr code))))
+                (ff (cddr code) level (+ n 2)))
                (else
-                (format #t "~va~3,'0d: ~a ~a~%" level ""
-                        n (car code) (cadr code))
-                (if (is-a? (cadr code) <compiled-code>)
-                  (ff (vm-code->list (cadr code)) (+ level 4) 0))
+                (format #t "~va~4,' d ~s ~s~%" level "" n (car code) (cadr code))
                 (ff (cddr code) level (+ n 2))))))
           (else
            (error "ika: syntax error:" code))))
-  (newline)
-  (ff prog 0 0))
+  (format #t "(~s ~s~%" (car prog) (cadr prog))
+  (ff (cddr prog) 4 0))
 
 (define (ika/pp2 prog)
   (define (ff code level)
@@ -84,54 +95,64 @@
 ;;;
 (define (c sexp)
   (let ((cc (compile sexp (interaction-environment))))
-    (ika/pp (vm-code->list cc))
-    #;(vm-dump-code cc)
+    (newline)
+    (ika/pp (append '(%top-level (0 0))
+                    (vm-code->list cc)))
+    (newline)
+    (vm-dump-code cc)
     ))
-;;;
-;;;
-;;;
-(define (ika->vm-code-old ika)
-  (let ((ccb (make-compiled-code-builder 0 0 '%toplevel #f #f #f))
-        (maxstack 0))
-    (for-each (lambda (stmt)
-                (case (car stmt)
-                  ((CONST)
-                   (and (= (length stmt) 2)
-                        (integer? (cadr stmt))
-                        (compiled-code-emit0o! ccb
-                                               (vm-insn-name->code 'CONST)
-                                               (cadr stmt))))
-                  ((RET)
-                   (compiled-code-emit-RET! ccb))
-                  (else (error #"ika: unknown mnemonic: ~(car stmt)"))))
-              ika)
-    (compiled-code-finish-builder ccb maxstack)
-    ccb))
 
+;;;
+;;;
+;;;
 (define (ika->vm-code ika)
-  (let ((ccb (make-compiled-code-builder 0 0 '%toplevel #f #f #f)))
-    (let lp ((ika    ika)
-             (maxstack 4))
-      (cond ((null? ika)
-             (compiled-code-finish-builder ccb maxstack)
-             ccb)
-            ((pair? (car ika))
-             (let ((np   (- (length (car ika)) 1))
-                   (info (vm-find-insn-info (caar ika))))
-               (if (not (= np  (~ info'num-params)))
-                 (error "ika: wrong number of parameters, got: " np))
-               (case (~ info'operand-type)
-                 ((none)
-                  (compiled-code-emit0!  ccb (vm-insn-name->code (caar ika)))
-                  (lp (cdr ika) maxstack))
-                 (else
-                  (compiled-code-emit0o! ccb
-                                         (vm-insn-name->code (caar ika))
-                                         (cadr ika))
-                  (lp (cddr ika) maxstack)))))
-            (else
-             (error "ika: syntax error"))))))
-        
+  (let ((name     (car ika))
+        (reqargs  (caadr ika))
+        (optargs  (cadadr ika)))
+    (let ((ccb (make-compiled-code-builder reqargs optargs name #f #f #f)))
+      (let lp ((ika (cddr ika))
+               (maxstack 0))
+        (cond ((null? ika)
+               (compiled-code-finish-builder ccb maxstack)
+               ccb)
+              ((pair? (car ika))
+               (let ((np   (- (length (car ika)) 1))
+                     (info (vm-find-insn-info (caar ika))))
+                 (if (not (= np  (~ info'num-params)))
+                   (error #"ika: wrong number of parameters, required ~(~ info'num-params), got ~|np|."))
+                 (let ((arg0 (if (>= np 1) (cadar ika) 0))
+                       (arg1 (if (= np 2) (caddar ika) 0)))
+
+                   (case (~ info'operand-type)
+
+                     ((none)
+                      (compiled-code-emit2! ccb (~ info'code) arg0 arg1)
+                      (lp (cdr ika) maxstack))
+
+                     ((code)
+                      (let ((operand (cadr ika)))
+                        (if (pair? operand)
+                          (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 (ika->vm-code operand))
+                          (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 operand))
+                        (lp (cddr ika) maxstack)))
+
+                     ((obj)
+                      (let ((operand (cadr ika)))
+                        (if (and (pair? operand) (eq? 'mkid (car operand)))
+                          (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 (make-identifier (cadr operand) (find-module 'user) '()))
+                          (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 operand))
+                        (lp (cddr ika) maxstack)))
+
+                     (else
+                      (let ((operand (cadr ika)))
+                        (compiled-code-emit2o! ccb (~ info'code) arg0 arg1 operand)
+                        (lp (cddr ika) maxstack)))
+
+                     ))))
+
+              (else
+               (error "ika: syntax error")))))))
+
 #|
 (vm-insn-code 'CONST)
 (vm-insn-name->code 'CONST)
@@ -146,12 +167,15 @@
       (if (= n 1)
         1
         (* n (fact (- n 1))))))
+(c '(define (hello)
+      (print "hello, world")))
+
 <vm-insn-info>  vm-build-insn
 vm-insn-size
 (slot-ref (vm-find-insn-info 'CONST) 'num-params)
 (slot-ref (vm-find-insn-info 'CONST) 'alt-num-params)
 (slot-ref (vm-find-insn-info 'CONST) 'operand-type)
-
+(make-identifier 'print (find-module 'user) '())
 |#
 
 ;; EOF
