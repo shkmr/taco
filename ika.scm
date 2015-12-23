@@ -45,7 +45,7 @@
           ;; pseudo insn. just label for now.
           ((and (pair? (car cp))
                 (eq? (caar cp) 'label))
-           (format #t "~va~4,' d ~s~%" level "" n (car cp))
+           (format #t "~va     ~s~%" level "" (car cp))
            (ff (cdr cp) level n))
 
           ;; VM insn.
