@@ -63,15 +63,12 @@
                   (cond ((is-a? operand <compiled-code>)
                          (format #t "~va~3,' d ~s ~s~%" level "" n opcode operand)
                          (ff (vm-code->list operand) (+ level 4) 0))
-                        
                         ((and (pair? operand) (symbol? (car operand)))
                          (format #t "~va~4,' d ~s (~s ~s~%" level "" n opcode (car operand) (cadr operand))
                          (ff (cddr operand) (+ level 4) 0)
                          (format #t "~va     )~%" level ""))
-
                         (else
                          (format #t "~va~3,'d ~s ~s~%" level "" n opcode operand))) ; or error?
-
                   (ff (cddr cp) level (+ n 2))))
 
                ((obj+addr)
