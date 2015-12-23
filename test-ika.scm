@@ -5,24 +5,26 @@
 (use ika)
 (test-module 'ika)
 
-(define test-code1 '(%top-level (0 0)
-                         (CONST) 2
-                         (RET)
-                         ))
+(define test-code1
+  '(%top-level (0 0)
+        (CONST) 2
+        (RET)
+        ))
 
-(define test-code2 '(%top-level (0 0)
-                         (CONST) 1
-                         (PUSH)
-                         (CONST) 2
-                         (NUMADD2)
-                         (PUSH)
-                         (CONST) 3
-                         (PUSH)
-                         (CONST) 4
-                         (NUMADD2)
-                         (NUMMUL2)
-                         (RET)
-                         ))
+(define test-code2
+  '(%top-level (0 0)
+        (CONST) 1
+        (PUSH)
+        (CONST) 2
+        (NUMADD2)
+        (PUSH)
+        (CONST) 3
+        (PUSH)
+        (CONST) 4
+        (NUMADD2)
+        (NUMMUL2)
+        (RET)
+        ))
 
 (define test-code3
   '(%top-level (0 0)
@@ -64,6 +66,8 @@
                (DEFINE 0) (mkid fo)
                (RET)
                ))
+
+;;; ToDo: write test case for ``codes'' operand type.
 
 (define (a name code)
   (display "*****: ")

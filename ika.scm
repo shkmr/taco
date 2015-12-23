@@ -227,61 +227,23 @@
     ))
 
 #|
-(vm-insn-code 'CONST)
-(vm-insn-name->code 'CONST)
-(vm-insn-code->name 2)
-(disasm fact)
-(ika/pp (vm-code->list (closure-code fact)))
 
 (c '(+ 1 2))
 (c '(lambda (a b c) (fobar a b c)))
+
+(c '(define (hello)
+      (print "hello, world")))
 
 (c '(define (fact n)
       (if (= n 1)
         1
         (* n (fact (- n 1))))))
-(c '(define (hello)
-      (print "hello, world")))
 
 (c '(define (fo a)
       (if (eq? a 'fobar)
         'yes
         'no)))
-(c '(define (foo n)
-      (define (even? x)
-        (if (= x 0)
-          #t
-          (odd? (- x 1))))
-      (define (odd? x)
-        (if (= x 0)
-          #f
-          (even? (- x 1))))
-      (even? n)))
 
-(define (foo x)
-  (define (even? x)
-    (if (= x 0)
-      #t
-      (odd? (- x 1))))
-  (define (odd? x)
-    (if (= x 0)
-      #f
-      (even? (- x 1))))
-  (even? x))
-
-(foo 11)
-
-
-
-<vm-insn-info>  vm-build-insn
-vm-insn-size
-(slot-ref (vm-find-insn-info 'CONST) 'num-params)
-(slot-ref (vm-find-insn-info 'CONST) 'alt-num-params)
-(slot-ref (vm-find-insn-info 'CONST) 'operand-type)
-(make-identifier 'print (find-module 'user) '())
-(define a '())
-
-(vm-find-insn-info 'CONST)
 |#
 
 
