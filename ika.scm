@@ -92,7 +92,8 @@
                                      (if (is-a? cc <compiled-code>)
                                        (ff (vm-code->list cc) (+ level 4) 0)))
                                    operand)
-                         (format #t "~va     )~%" level "")))))
+                         (format #t "~va     )~%" level "")))
+                  (ff (cddr cp) level (+ n 2))))
 
                ((obj+addr)
                 (let ((opcode (car cp))
