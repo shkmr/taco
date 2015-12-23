@@ -1,6 +1,5 @@
 Makefile
 VERSION
-insn.html
 *~
 *.log
 *.so
