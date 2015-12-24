@@ -1,6 +1,9 @@
 ;;;
-;;; LEXER FOR TACO1 AND TACO2
+;;; lexer for taco.
 ;;;
+(define-module tlex (export tlex))
+(select-module tlex)
+
 ;;;
 ;;; Followings must be processed in prior to this lexer.
 ;;; (Will most likely done in c-preprocessor)
@@ -8,29 +11,28 @@
 ;;;  0) Comment (both /* */ and //)
 ;;;  1) Merger of lines by backslash(\)  (K&R A12.2)
 ;;;  2) Trigraph. (CARM 2.1.4, K&R A12.1)
-;;;  3) ## operator. 
+;;;  3) ## operator.
 ;;;  4) alternate token spelling (CARM 2.4) for #, ##.
 ;;;
 (define taco-keywords
   '(
-    (break       BREAK)		
-    (case        CASE)		
+    (break       BREAK)
+    (case        CASE)
     (continue	 CONTINUE)
     (default	 DEFAULT)
     (do		 DO)
     (else	 ELSE)
-    (enum	 ENUM)		
+    (enum	 ENUM)
     (for	 FOR)
     (func        FUNC)
     (goto	 GOTO)
-    (if		 IF)	
+    (if		 IF)
     (print       PRINT)
     (proc        PROC)
     (return	 RETURN)
     (switch	 SWITCH)
     (var         VAR)
     (while	 WHILE)
-
     ))
 
 (define taco-operators
@@ -77,29 +79,29 @@
 (define (get-operator-val symbol) (assq symbol taco-operators))
 (define (typedefed? symbol) (memq symbol typedefed-identifiers))
 (define in-typedef #f)
-(define (install-type name type) 
+(define (install-type name type)
   (define (type-compatible? T1 T2) (equal? T1 T2))
-  (format #t "### installing type ~a~%" symbol)
-  (let ((T (assq name typedefed-indentifiers)))
+  (format #t "### installing type ~a~%" name)
+  (let ((T (assq name typedefed-identifiers)))
     (if (and T (not (type-compatible? (cdr T) type)))
         (errorf "### typedef ~a ~%" type)))
   (set! typedefed-identifiers
         (cons (cons name type) typedefed-identifiers)))
 
 ;;;
-;;; taco-lex
+;;; tlex
 ;;;
 ;;; Changes from c-lex:
 ;;;
 ;;;  1. Return NEWLINE token.
 ;;;  2. $n ARG token.
 ;;;
-(define (taco-lex)
+(define (tlex)
   (skip-spaces)
   (let loop ((c (read-char)))
     (cond
      ((eof-object? c)  '*eoi*)
-     ((char=? c #\newline) 
+     ((char=? c #\newline)
       (inc! lineno)
       'NEWLINE)
      ((char=? c #\#)                    ; XXX Check beginning of line?
@@ -123,7 +125,7 @@
      ((and (char=? c #\.) (char-numeric? (peek-char)))
       (cons 'CONSTANT (read-flonum (list c) #[0-9] 10 #[Ee])))
 
-     ((char=? c #\.)  
+     ((char=? c #\.)
       (if (char=? (peek-char) #\.)
           (begin
             (read-char)
@@ -170,21 +172,21 @@
       (skip-spaces)
       (loop (read-char))))))
 
-;; end of taco-lex.
+;; end of tlex.
 
 ;;;
 ;;;
 ;;;
 ;; gcc of GCC allows dollar sign
-;;(define initial-identifier-charset #[A-Za-z_])
-;;(define identifier-charset         #[A-Za-z_0-9])  
-(define initial-identifier-charset #[A-Za-z_$])
-(define identifier-charset         #[A-Za-z_$0-9])
+(define initial-identifier-charset #[A-Za-z_])
+(define identifier-charset         #[A-Za-z_0-9])
+;;(define initial-identifier-charset #[A-Za-z_$])
+;;(define identifier-charset         #[A-Za-z_$0-9])
 
 (define operator-charset           #[*~!+\-/\^&%=?<>])
 (define special-operator-charset   #[|.]) ; cant be in scheme symbol
 
-(define scheme-token-charset 
+(define scheme-token-charset
   (char-set    #\.                 ; DOT
 	       #\:                 ; COLON
 	       #\(                 ; LPAREN
@@ -206,7 +208,7 @@
     (if (and (not (eof-object? c))
 	     (or (char=? c #\space)
 		 (char=? c #\tab)
-		 (char=? c #\x0b)     ; VT  
+		 (char=? c #\x0b)     ; VT
 		 (char=? c #\page)))
         (begin
           (read-char)
@@ -279,13 +281,13 @@
     (if (and (> n 0) (char-octal-digit? c))
         (begin
           (read-char)
-          (readn (peek-char) 
-                 (- n 1) 
+          (readn (peek-char)
+                 (- n 1)
                  (+ (* v 8) (hexchar->integer c))))
         (integer->char v)))
 
   (define (readx c)
-    (let lp ((c c) 
+    (let lp ((c c)
              (v 0))
       (if  (char-hex-digit? c)
            (begin
@@ -296,7 +298,7 @@
 
   (define (readu c)
 
-    (define (range-check v) 
+    (define (range-check v)
       ;; CARM: Sec 2.9, p41
       (or (= v (string->number "0024" 16))
           (= v (string->number "0040" 16))
@@ -305,13 +307,13 @@
           (not (and (<= (string->number "D800" 16) v)
                     (<= v (string->number "DFFF" 16))))))
     (receive (n v)
-        (let lp ((c c) 
-                 (n 1) 
+        (let lp ((c c)
+                 (n 1)
                  (v 0))
           (if (char-hex-digit? c)
               (begin
                 (read-char)
-                (lp (peek-char) 
+                (lp (peek-char)
                     (+ n 1)
                     (+ (* v 16) (hexchar->integer c))))
               (values n v)))
@@ -319,11 +321,11 @@
                    (= n 8)))
           (error "Universal character name must be 4 or 8 hex-digit"))
       (range-check v)
-      (ucs-char v)))
+      (ucs->char v)))
 
   (if (char=? c #\\)
       (let ((c (read-char)))
-        (cond                
+        (cond
          ((char=? c #\a) #\x07)         ; BEL  07  ^G
          ((char=? c #\b) #\x08)         ; BS   08  ^H
          ((char=? c #\t) #\tab)         ; HT   09  ^I
@@ -341,7 +343,7 @@
               (error "\\u must be followed by hex-digit" (peek-char))))
          ((char-octal-digit? c)
           (readn (peek-char) 3 (hexchar->integer c)))
-         ((char-set-contains? #[?\'\"\\] c) c) ; first two backslash 
+         ((char-set-contains? #[?\'\"\\] c) c) ; first two backslash
                                                ; are placed to fool emacs
          ((char-set-contains? #[a-z] c)
           (error "Warning: unknown lower case espace character is used" c))
@@ -370,31 +372,31 @@
             (number->string s)
             (let ((cc (backslash c)))
               ;; Meaning of Multicharacter constant is implementation
-              ;; dependent.  Here we implement a convention with left-to-right 
+              ;; dependent.  Here we implement a convention with left-to-right
               ;; packing, which is  described in CARM pp. 31--32.
-              (lp (read-char) 
-                  (+ (* 256 s) 
+              (lp (read-char)
+                  (+ (* 256 s)
                      (char->integer cc))))))))
 ;;;
 ;;; read-hexadecimal, octal.
 ;;;
 (define (read-octal-or-flonum l)
   (define (rl->n l)
-    (for-each (lambda (c) 
+    (for-each (lambda (c)
                 (if (not (char-set-contains? #[0-7] c))
                     (error "invalid char in octal" c)))
               l)
     (apply string (reverse l)))
 
   (let ((c (peek-char)))
-    (cond 
+    (cond
      ((char-set-contains? #[0-9] c)
       (read-char)
       (read-octal-or-flonum (cons c l)))
      ((char=? #\. c)
       (read-char)
       (read-flonum (cons c l) #[0-9] 10 #[Ee]))
-     ((char-set-contains? #[Ee] c) 
+     ((char-set-contains? #[Ee] c)
       (read-char)
       (read-expnum (cons c l) 10))
      ((char-set-contains? #[ULul] c)
@@ -403,7 +405,7 @@
             (rl->n l)))
      (else
       (list 'int (rl->n l))))))
-  
+
 ;;;
 ;;; read decimal integer or floating point
 ;;;
@@ -413,14 +415,14 @@
     (apply string (reverse l)))
 
   (let ((c (peek-char)))
-    (cond 
+    (cond
      ((char-set-contains? ics c)
       (read-char)
       (read-number-constant (cons c l) ics radix ecs))
      ((char=? c #\.)
       (read-char)
       (read-flonum (cons c l) ics radix ecs))
-     ((char-set-contains? ecs c) 
+     ((char-set-contains? ecs c)
       (read-char)
       (read-expnum (cons c l) radix))
      ((char-set-contains? #[ULul] c)
@@ -432,12 +434,12 @@
 
 (define (read-decimal l)
   (read-number-constant l #[0-9] 10 #[Ee]))
-(define (read-hexadecimal l) 
+(define (read-hexadecimal l)
   (read-number-constant l #[0-9A-Fa-f] 16 #[Pp]))
 
 (define (integer-suffix c)
   ;; ugly...
-  (cond 
+  (cond
    ((char-ci=? c #\u)
     (let ((c (peek-char)))
       (cond ((char=? c #\l)
@@ -505,7 +507,7 @@
      ((char-set-contains? ics c)
       (read-char)
       (read-flonum (cons c l) ics radix ecs))
-     ((char-set-contains? ecs c) 
+     ((char-set-contains? ecs c)
       (read-char)
       (read-expnum (cons c l) radix))
      ((char-ci=? c #\f)
@@ -540,7 +542,7 @@
       (list 'long-double (rl->n l)))
      (else
       (list 'double (rl->n l)))))
-    
+
   (if (char-set-contains? #[0-9\-\+] (peek-char))
       (let ((c (read-char)))
         (exp1 (peek-char) (cons c l)))
@@ -581,147 +583,8 @@
 	       (lp (peek-char) (cons c l)))
 	      (else
 	       (let ((cmd (assq (l->symbol l) sharp-commands)))
-		 (if cmd 
+		 (if cmd
 		     ((cadr cmd))
 		     (sc-ignore))))))))
 
-;;;
-;;;
-;;;
-(define (main args)
-
-  (define *eof* (with-input-from-string "" read-char))
-
-  (define passed 0)
-  (define failed 0)
-
-  (define (run-lexer)
-    (guard (e ((is-a? e <error>)
-               (cons 'ERROR (ref e 'message)))
-              (else
-               (error "Unexpected exception")))
-       (port-map (lambda (x) x) 
-                 (lambda ()
-                   (let ((x (taco-lex)))
-                     (if (eq? x '*eoi*) 
-                         *eof*
-                         x))))))
-
-  (define (test in expect)
-    (let ((r  (with-input-from-string in run-lexer)))
-;      (format #t "~20a -> ~40,,,,40:s : ~a~%"
-       (format #t "~20a -> ~s : ~a~%"
-              in
-              r
-              (if (equal? r expect) 
-                  (begin
-                    (inc! passed)
-                    'ok )
-                  (begin
-                    (inc! failed)
-                    (display "")
-                    'FAIL!!)))))
-  
-  (define (report)
-    (format #t "===================================~%")
-    (format #t "~a failed, out of ~a tests~%"
-            failed (+ failed passed))
-    (format #t "===================================~%")
-    )
-
-  ;; 
-  ;;  TESTS START HERE
-  ;;
-
-  ;;
-  ;; CARM 2.3 TOKENS
-  ;;
-  (test "forwhile;" '((IDENTIFIER . forwhile) SEMICOLON))
-  (test "b>x;"   '((IDENTIFIER . b) >    (IDENTIFIER . x) SEMICOLON))
-  (test "b->x;"  '((IDENTIFIER . b) PTR_EXTENT   (IDENTIFIER . x) SEMICOLON))
-  (test "b--x;"  '((IDENTIFIER . b) MINUSMINUS   (IDENTIFIER . x) SEMICOLON))
-  (test "b---x;" '((IDENTIFIER . b) MINUSMINUS - (IDENTIFIER . x) SEMICOLON))
-  ;;
-  ;; integer constants
-  ;;
-  (test "1234;"    '((CONSTANT int "1234") SEMICOLON))
-  (test "012;"     '((CONSTANT int "012")  SEMICOLON))
-  (test "0x12;"    '((CONSTANT int "0x12") SEMICOLON))
-  ;;
-  ;; character constants
-  ;;
-  (test "'a';"     '((CONSTANT int "97")   SEMICOLON))
-  (test "'A';"     '((CONSTANT int "65")   SEMICOLON))
-  (test "' ';"     '((CONSTANT int "32")   SEMICOLON))
-  (test "'?';"     '((CONSTANT int "63")   SEMICOLON))
-  (test "'\\r';"   '((CONSTANT int "13")   SEMICOLON))
-  (test "'\\0';"   '((CONSTANT int "0")    SEMICOLON))
-  (test "'\"';"    '((CONSTANT int "34")   SEMICOLON))
-  ;; "255" or "-1", depending on the size of char
-  (test "'\\377';" '((CONSTANT int "255")  SEMICOLON))
-  (test "'%';"     '((CONSTANT int "37")   SEMICOLON))
-  (test "'\\23';"  '((CONSTANT int "19")   SEMICOLON))
-  (test "'8';"     '((CONSTANT int "56")   SEMICOLON))
-  (test "'\\\\';"  '((CONSTANT int "92")   SEMICOLON))
-  ;; (string->number "41424344" 16) -> 1094861636
-  (test "'ABCD';"  '((CONSTANT int "1094861636") SEMICOLON))
-  ;;
-  ;; floating point constants
-  ;;
-  (test "0.;"       '((CONSTANT double "0.")       SEMICOLON))
-  (test "3e1;"      '((CONSTANT double "3e1")      SEMICOLON))
-  (test "3.14159;"  '((CONSTANT double "3.14159")  SEMICOLON))
-  (test ".0;"       '((CONSTANT double ".0")       SEMICOLON))
-  (test "1.0E-3;"   '((CONSTANT double "1.0E-3")   SEMICOLON))
-  (test "1e-3;"     '((CONSTANT double "1e-3")     SEMICOLON))
-  (test "1.0;"      '((CONSTANT double "1.0")      SEMICOLON))
-  (test "0.00034;"  '((CONSTANT double "0.00034")  SEMICOLON))
-  (test "2e+9;"     '((CONSTANT double "2e+9")     SEMICOLON))
-  ;; STDC floating point
-  (test "1.0f;"     '((CONSTANT float "1.0")          SEMICOLON))
-  (test "1.0e67L;"  '((CONSTANT long-double "1.0e67") SEMICOLON))
-  (test "0E1L;"     '((CONSTANT long-double "0E1")   SEMICOLON))
-  (test "0x1.0p1;"  '((CONSTANT double "0x1.0p1") SEMICOLON))
-  (test "0x1.0;"    '(ERROR . "hexadecimal floating constants require an exponent"))
-  ;;
-  ;; String constants
-  ;;
-  (test "\"\";" '((STRING . "") SEMICOLON))
-  (test "\"\\\"\";" '((STRING . "\"") SEMICOLON))
-  (test "\"Copyright 2000 \\\nTexas Instruments. \"" 
-   '((STRING . "Copyright 2000 Texas Instruments. ")))
-  (test "\"Comments begin with '/*'.\\n\""
-   '((STRING . "Comments begin with '/*'.\n")))
-  (test "X++Y;" 
-   '((IDENTIFIER . X) PLUSPLUS (IDENTIFIER . Y) SEMICOLON)
-   )
-  (test "-12ul;"
-   '(- (CONSTANT unsigned-long "12") SEMICOLON) 
-   )
-  (test "1.37E+6L;"
-   '((CONSTANT long-double "1.37E+6") SEMICOLON)  
-   )
-  (test "\"String \"\"FOO\"\"\""
-   '((STRING . "String ") (STRING . "FOO") (STRING . ""))
-   )
-  (test "\"Strinng+\\\"FOO\\\"\""
-   '((STRING . "Strinng+\"FOO\""))
-   )
-  (test "x**2;"
-   '((IDENTIFIER . x) * * (CONSTANT int "2") SEMICOLON) 
-   )
-  ;;Trigraphs are supposed to be processed in prior to lexer
-  ;;(test "\"X??/\"" '())
-  ;;Dollar sign canot be a part of identifier
-  ;;(test "B$C;" '())
-  (test "A*=B;"
-   '((IDENTIFIER . A) (ASSIGN . *=) (IDENTIFIER . B) SEMICOLON)
-   )
-  ;; ## operator is processed by cpp, lexer does not expect to see it.
-  ;;(test "while##DO;" '())
-  (report)
-  )
-
 ;; EOF
-
-
