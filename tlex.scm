@@ -4,16 +4,6 @@
 (define-module tlex (export tlex))
 (select-module tlex)
 
-;;;
-;;; Followings must be processed in prior to this lexer.
-;;; (Will most likely done in c-preprocessor)
-;;;
-;;;  0) Comment (both /* */ and //)
-;;;  1) Merger of lines by backslash(\)  (K&R A12.2)
-;;;  2) Trigraph. (CARM 2.1.4, K&R A12.1)
-;;;  3) ## operator.
-;;;  4) alternate token spelling (CARM 2.4) for #, ##.
-;;;
 (define taco-keywords
   '(
     (break       BREAK)
@@ -95,6 +85,15 @@
 ;;;
 ;;;  1. Return NEWLINE token.
 ;;;  2. $n ARG token.
+;;;
+;;; Followings must be processed in prior to this lexer.
+;;; (Will most likely done in c-preprocessor)
+;;;
+;;;  0) Comment (both /* */ and //)
+;;;  1) Merger of lines by backslash(\)  (K&R A12.2)
+;;;  2) Trigraph. (CARM 2.1.4, K&R A12.1)
+;;;  3) ## operator.
+;;;  4) alternate token spelling (CARM 2.4) for #, ##.
 ;;;
 (define (tlex)
   (skip-spaces)
