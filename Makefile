@@ -3,6 +3,10 @@ all : insn.html
 insn.html : make-insn-table.scm
 	gosh make-insn-table.scm > insn.html
 
+run-taco2 :
+	gosh -I. -Ilalr -I../../ggc-messedup/taco taco2.scm test.taco
+
+
 check : check-tlex check-ika check-taco0
 
 check-tlex :

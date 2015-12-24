@@ -4,11 +4,9 @@
 ;;; Simple optimiazation = Constant expression
 ;;;                        + NUMADDI, NUMSUBI
 ;;;
-
 (use srfi-1)
 (use lalr)
-
-(add-load-path ".")
+(use tlex)
 (use mgvm)
 
 (define taco
@@ -46,7 +44,7 @@
     (error    NEWLINE)
     )
 
-   (asgn
+  (asgn
     (IDENTIFIER = expr) : (list 'VARSET $1 $3)
     (ARG = expr)        : (list 'ARGSET $1 $3)
     ) 
@@ -432,12 +430,6 @@
     (pass1 prog)
     (pass2 prog)))
 
-
-;;;
-;;;   LEXER
-;;;
-(load "t-lex.scm")
-
 ;;;
 ;;;  RUNTIME LIBRARIES (Called through MGVM)
 ;;;
@@ -459,8 +451,8 @@
       (with-input-from-file/mirroring-to-port
        (cadr args)
        (current-output-port)
-       (lambda () (taco t-lex error)))
-      (taco t-lex error))
+       (lambda () (taco tlex error)))
+      (taco tlex error))
   0)
 
 ;;; EOF

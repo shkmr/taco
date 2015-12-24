@@ -1,0 +1,122 @@
+#   TEST INPUT FOR TACO2
+#
+#
+# Simple expr
+1
+
+1+1
+
+(1+2)*3
+
+3*(3+2*(4+5))
+
+# Simple stmt
+{1
+2
+3}
+
+{1
+2+3}
+
+print 1
+
+print "hello, world\n"
+
+print 1,2,3
+
+A=1
+
+B=2
+
+print "A=", A, ", B=", B, "\n"
+
+if (1==0) print(20)
+
+if (1!=0) print(10)
+
+if (1!=1) print(10) else print(20)
+
+# little complex
+
+{  if (A==B) {
+      print "A is euqal to B\n"
+   } else {
+      print "A is different to B\n"
+   }
+   print "That's what I see\n"
+}
+
+{   A=2
+    B=2
+}
+
+{  if (A==B) {
+       print "A is euqal to B\n"
+   } else {
+       print "A is different to B\n"
+   }
+   print "That's what I see\n"
+}
+
+
+# function definition
+
+func uoo(2) {
+     return $1*$2
+}
+
+func foo(3) {
+     return $1+$2*$3
+}
+
+func moo(1) {
+     print "Result is ", $1, "\n"
+     return $1
+}
+
+func fact(1) {
+  if ($1 != 0) { 
+     return  $1*fact($1 - 1)
+  } else {
+     return  1
+  }
+}
+
+func ack(2) {
+     if ($1 == 0) return $2+1
+     if ($2 == 0) return ack($1-1, 1)
+     return ack($1-1, ack($1, $2-1))
+}
+
+# function call. we need to declare gobal variable .
+{   a=1
+    b=2
+    c=3
+}
+
+proc fib(1) {
+     a = 0
+     b = 1
+     while (b < $1) {
+           c = b
+           b = a + b
+           a = c
+           print a, b, $1, "\n"           
+     }
+}
+
+
+moo(10)
+
+moo(foo(a,b,c))
+
+
+fact(5)  # should be 120
+
+ack(3,3) # should be 61
+
+i = 0
+while (i < 100) {
+      fib(i)
+      i = i + 1
+}
