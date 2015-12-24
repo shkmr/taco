@@ -114,7 +114,7 @@
      ((char=? c #\0)
       (cond ((char-ci=? (peek-char) #\x)
              (read-char)
-             (cons 'CONSTANT (read-hexadecimal '(#\x #\0))))
+             (cons 'CONSTANT (read-hexadecimal '())))
             (else
              (cons 'CONSTANT (read-octal-or-flonum (list c))))))
 
@@ -380,12 +380,12 @@
 ;;; read-hexadecimal, octal.
 ;;;
 (define (read-octal-or-flonum l)
-  (define (rl->n l)
+  (define (->n l)
     (for-each (lambda (c)
                 (if (not (char-set-contains? #[0-7] c))
                     (error "invalid char in octal" c)))
               l)
-    (apply string (reverse l)))
+    (string->number (apply string (reverse l)) 8))
 
   (let ((c (peek-char)))
     (cond
@@ -401,17 +401,17 @@
      ((char-set-contains? #[ULul] c)
       (read-char)
       (list (integer-suffix c)
-            (rl->n l)))
+            (->n l)))
      (else
-      (list 'int (rl->n l))))))
+      (list 'int (->n l))))))
 
 ;;;
 ;;; read decimal integer or floating point
 ;;;
 (define (read-number-constant l ics radix ecs)
 
-  (define (rl->n l)
-    (apply string (reverse l)))
+  (define (->n l)
+    (string->number (apply string (reverse l)) radix))
 
   (let ((c (peek-char)))
     (cond
@@ -427,9 +427,9 @@
      ((char-set-contains? #[ULul] c)
       (read-char)
       (list (integer-suffix c)
-            (rl->n l)))
+            (->n l)))
      (else
-      (list 'int (rl->n l))))))
+      (list 'int (->n l))))))
 
 (define (read-decimal l)
   (read-number-constant l #[0-9] 10 #[Ee]))
@@ -493,13 +493,12 @@
     (error "there is a bug in lexer"))))
 
 (define (read-flonum l ics radix ecs)
-  ;;(define (rl->n l)
-  ;;  (string->number (apply string (reverse l))))
-  (define (rl->n l) (apply string (reverse l)))
+  (define (->n l)
+    (string->number (apply string (reverse l))))
 
   (define (error-if-hex)
     (if (= radix 16)
-        (error "hexadecimal floating constants require an exponent")))
+        (error "hexadecimal floating constant requires an exponent")))
 
   (let ((c (peek-char)))
     (cond
@@ -512,40 +511,44 @@
      ((char-ci=? c #\f)
       (read-char)
       (error-if-hex)
-      (list 'float (rl->n l)))
+      (list 'float (->n l)))
      ((char-ci=? c #\l)
       (read-char)
       (error-if-hex)
-      (list 'long-double (rl->n l)))
+      (list 'long-double (->n l)))
      (else
       (error-if-hex)
-      (list 'double (rl->n l))))))
+      (list 'double (->n l))))))
 
 ;;;
 ;;;
 ;;;
 (define (read-expnum l radix)
 
-  (define (rl->n l) (apply string (reverse l)))
+  (define (->n l) 
+    (case radix
+      ((10) (string->number (apply string (reverse l))))
+      ((16) (apply string (reverse l))) ; XXX todo!!
+      (else
+       (error "radix has to be either 10 or 16"))))
 
   (define (exp1 c l)
-    (cond
-     ((char-numeric? c)
-      (read-char)
-      (exp1 (peek-char) (cons c l)))
-     ((char-ci=? c #\f)
-      (read-char)
-      (list 'float (rl->n l)))
-     ((char-ci=? c #\l)
-      (read-char)
-      (list 'long-double (rl->n l)))
-     (else
-      (list 'double (rl->n l)))))
+    (cond ((char-numeric? c)
+           (read-char)
+           (exp1 (peek-char) (cons c l)))
+          ((char-ci=? c #\f)
+           (read-char)
+           (list 'float (->n l)))
+          ((char-ci=? c #\l)
+           (read-char)
+           (list 'long-double (->n l)))
+          (else
+           (list 'double (->n l)))))
 
   (if (char-set-contains? #[0-9\-\+] (peek-char))
-      (let ((c (read-char)))
-        (exp1 (peek-char) (cons c l)))
-      (error "malformed floating point expression")))
+    (let ((c (read-char)))
+      (exp1 (peek-char) (cons c l)))
+    (error "malformed floating point expression")))
 
 ;;;
 ;;;
