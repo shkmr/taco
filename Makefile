@@ -3,7 +3,10 @@ all : insn.html
 insn.html : make-insn-table.scm
 	gosh make-insn-table.scm > insn.html
 
-check : check-ika check-taco0
+check : check-tlex check-ika check-taco0
+
+check-tlex :
+	@gosh -I.  test-tlex.scm > test-tlex.log
 
 check-ika :
 	@gosh -I. -Ivmhack test-ika.scm > test-ika.log
