@@ -21,5 +21,5 @@ check-taco0 :
 	@gosh -I. -Ilalr -Ivmhack test-taco0.scm > test-taco0.log
 
 clean :
-	rm -f *.log *~ insn.html taco0.out
+	rm -f *.log *~ insn.html taco0.out taco2.out
 
