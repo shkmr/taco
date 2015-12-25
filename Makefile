@@ -6,7 +6,10 @@ insn.html : make-insn-table.scm
 run-taco2 :
 	gosh -fload-verbose -I../../ggc-messedup/taco -Ilalr -I. tc2.scm test.taco
 
-check : check-tlex check-ika check-taco0
+check : check-taco2 check-tlex check-ika check-taco0
+
+check-taco2 :
+	@gosh -I../../ggc-messedup/taco -Ilalr -I. test-taco2.scm > test-taco2.log
 
 check-tlex :
 	@gosh -I.  test-tlex.scm > test-tlex.log
