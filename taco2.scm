@@ -1,6 +1,6 @@
 ;;;
 ;;; TACO2 -- TACO1 + Simple optimization
-;;; 
+;;;
 ;;; Simple optimiazation : constant expression
 ;;;                        + NUMADDI, NUMSUBI
 ;;;
@@ -14,12 +14,12 @@
 
 (define taco2-parser
   (lalr-parser
-   ;; (expect: 0)   
+   ;; (expect: 0)
    ;; --- token definitions
-   (ID IDENTIFIER CONSTANT STRING 
+   (ID IDENTIFIER CONSTANT STRING
        VAR BLTIN UNDEF WHILE IF ELSE RETURN FUNC PROC ARG PRINT READ
        ;; FUNCTION PROCEDURE
-       LPAREN RPAREN LCBRA RCBRA LSBRA RSBRA COMMA OR NEWLINE 
+       LPAREN RPAREN LCBRA RCBRA LSBRA RSBRA COMMA OR NEWLINE
        (right: =)
        (left: OROR)
        (left: &&)
@@ -30,7 +30,7 @@
        (right: ^))
    ;;
    ;; --- rules
-   (top      
+   (top
     ()
     (top NEWLINE)
     (top defn NEWLINE)
@@ -40,8 +40,8 @@
     (top stmt NEWLINE)
     : (begin (print "compiling stmt: " $2)
              (taco-compile-and-run $2))
-    
-    ;;(top asgn NEWLINE) 
+
+    ;;(top asgn NEWLINE)
     ;;(top expr NEWLINE)
 
     (error    NEWLINE)
@@ -50,7 +50,7 @@
   (asgn
     (IDENTIFIER = expr) : (list 'VARSET $1 $3)
     (ARG = expr)        : (list 'ARGSET $1 $3)
-    ) 
+    )
 
    (stmt
     (expr)                   : $1
@@ -67,17 +67,17 @@
    (cond
     (LPAREN expr RPAREN) : $2
     )
-   
+
    (while  (WHILE)  )
-   
+
    (if     (IF)     )
 
-   (stmtlist 
+   (stmtlist
     ()                   : '()
     (stmtlist NEWLINE) : $1
     (stmtlist stmt)      : (append $1 (list $2))
     )
-           
+
    (expr
     (CONSTANT)              : (cadr $1)
     (IDENTIFIER)            : (list 'VARREF $1)
@@ -102,7 +102,7 @@
     (expr OROR expr)        : (list 'FUNCALL 'or (list $1 $3))
     (! expr)                : (list 'FUNCALL 'not (list $2))
     )
-   
+
    (prlist
     (expr)                : (list $1)
     (STRING)              : (list $1)
@@ -111,22 +111,22 @@
     )
 
    (defn
-     (FUNC procname LPAREN CONSTANT RPAREN stmt) 
+     (FUNC procname LPAREN CONSTANT RPAREN stmt)
      : (if (eq? (car $4) 'int)
            (list 'DEF 'FUNC $2 (cadr $4) $6)
            (errorp "in function definition"))
-     (PROC procname LPAREN CONSTANT RPAREN stmt) 
+     (PROC procname LPAREN CONSTANT RPAREN stmt)
      : (if (eq? (car $4) 'int)
            (list 'DEF 'PROC $2 (cadr $4) $6)
            (errorp "in procedure definition"))
      )
 
-   (procname 
+   (procname
     (IDENTIFIER) : $1
     )
 
-   (arglist 
-    ()                    : '()             
+   (arglist
+    ()                    : '()
     (expr)                : (list $1)
     (arglist COMMA expr)  : (append $1 (list $3))
     )
@@ -137,13 +137,16 @@
 ;;;  COMPILER
 ;;;
 (define (taco-compile-and-run tree)
-  (let ((prog (tacomp tree 0 #f)))
+  (let ((prog #f)
+        (result #f))
+    (set! prog (tacomp tree 0 #f))
     (tacolin prog)
     (display "= ")
     (mgvm/pp prog)
     (display "->")
-    (display (mgvm/run :program prog :verbose #f))
-    (newline)))
+    (set! result (mgvm/run :program prog :verbose #f))
+    (print result)
+    result))
 
 ;; For one arg insns (PUSHI, NUMADDI, etc).
 ;; In case of ScmWord = 32bit, insn_arg is
@@ -192,7 +195,7 @@
   (define (op-arg3 tree)  (list-ref tree 3))
   (define (op-arg4 tree)  (list-ref tree 4))
 
-  (cond 
+  (cond
    ((null? tree)       '())
    ((not (pair? tree)) (list tree))
    (else
@@ -238,7 +241,7 @@
        (let ((d1 (tacomp (op-arg1 tree) level indefn))
              (d2 (tacomp (op-arg2 tree) level indefn)))
          (binary-op '* * d1 d2)))
-      
+
       ((DIV)
        (let ((d1 (tacomp (op-arg1 tree) level indefn))
              (d2 (tacomp (op-arg2 tree) level indefn)))
@@ -282,7 +285,7 @@
              `((LREF ,(- level 1) ,(- indefn s 1))
                )
              )))
-               
+
       ((ARGSET)
        (if (= level 0)
            (error "$n in top-level")
@@ -323,7 +326,7 @@
            (label ,l))))
 
       ((WHILE)
-       ;; note: calling closure with 0 argument does not push 
+       ;; note: calling closure with 0 argument does not push
        ;;       enviroment. we only have to one level up, not two.
        (let ((c (tacomp (op-arg1 tree) (+ level 1) indefn))
              (s (tacomp (op-arg2 tree) (+ level 1) indefn))
@@ -372,7 +375,7 @@
 
       (else
        (error "not implemented yet"))))))
-  
+
 ;;;
 ;;;  LINKER
 ;;;
@@ -389,13 +392,13 @@
     (define (pass1 prog)
       (if (null? prog)
           #t
-          (cond 
+          (cond
            ((inst? (car prog))
             (case (inst-name (car prog))
               ((QUOTE)
                (pass1 (cddr prog)))
               ((label)
-               (hash-table-put! tab 
+               (hash-table-put! tab
                                 (inst-arg1 (car prog))
                                 (cdr prog))
                (set-car! prog '(NOP))   ; replace (label sym) by (NOP)
@@ -411,7 +414,7 @@
     (define (pass2 prog)
       (if (null? prog)
           #t
-          (cond 
+          (cond
            ((inst? (car prog))
             (case (inst-name (car prog))
               ((QUOTE)
@@ -436,7 +439,9 @@
 ;;;
 ;;;  RUNTIME LIBRARIES (Called through MGVM)
 ;;;
-(define (taco-print o)
+(define (taco-print o) (display o))
+
+(define (taco-print-o o)
   (if (number? o)
       (begin (display o)
              (display " "))
