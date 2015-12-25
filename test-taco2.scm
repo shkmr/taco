@@ -3,9 +3,6 @@
 (use taco2)
 (test-module 'taco2)
 
-(define (taco2-load file)       (with-input-from-file file taco2))
-(define (taco2-eval-string str) (with-input-from-string str taco2))
-
 (define taco.out (open-output-file "taco2.out"))
 
 (define *undef* (if #f #t))
@@ -76,7 +73,9 @@ print \"A=\", A, \", B=\", B, \"\n\"
 (run-test print1            *undef*)
 (run-test print2            *undef*)
 (run-test print3            *undef*)
+(run-test "A\n"             '(ERROR . "unknown global A\n"))
 (run-test print4            *undef*)
+(run-test "A\n"             1)
 
 (test-section "conditional. check taco2.out for compiled codes.")
 (run-test "if (1==0) 20\n"  #f)

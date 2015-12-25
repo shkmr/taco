@@ -9,7 +9,7 @@
   (use lalr)
   (use tlex)
   (use mgvm)
-  (export taco2 taco2-parser))
+  (export taco2-parser taco2 taco2-load taco2-eval-string))
 (select-module taco2)
 
 (define taco2-parser
@@ -450,7 +450,16 @@
 ;;;
 ;;;  API
 ;;;
-(define (taco2) (taco2-parser tlex error))
+(define (taco2)
+  (guard (e ((is-a? e <error>)
+             (cons 'ERROR (ref e 'message)))
+            (else
+             (error "Unexpected exception")))
+    (taco2-parser tlex error)))
+
+(define (taco2-load file)       (with-input-from-file file taco2))
+(define (taco2-eval-string str) (with-input-from-string str taco2))
+
 
 (provide "taco2")
 ;;; EOF
