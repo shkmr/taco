@@ -71,7 +71,7 @@
 (define in-typedef #f)
 (define (install-type name type)
   (define (type-compatible? T1 T2) (equal? T1 T2))
-  (format #t "### installing type ~a~%" name)
+  (print "### installing type " name)
   (let ((T (assq name typedefed-identifiers)))
     (if (and T (not (type-compatible? (cdr T) type)))
         (errorf "### typedef ~a ~%" type)))
