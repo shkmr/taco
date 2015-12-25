@@ -34,11 +34,11 @@
     ()
     (top NEWLINE)
     (top defn NEWLINE)
-    : (begin (format #t "compiling defn: ~s~%" $2)
+    : (begin (print "compiling defn: " $2)
              (taco-compile-and-run $2))
 
     (top stmt NEWLINE)
-    : (begin (format #t "compiling stmt: ~s~%" $2)
+    : (begin (print "compiling stmt: " $2)
              (taco-compile-and-run $2))
     
     ;;(top asgn NEWLINE) 
