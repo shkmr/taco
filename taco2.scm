@@ -1,15 +1,18 @@
 ;;;
 ;;; TACO2 -- TACO1 + Simple optimization
 ;;; 
-;;; Simple optimiazation = Constant expression
+;;; Simple optimiazation : constant expression
 ;;;                        + NUMADDI, NUMSUBI
 ;;;
-(use srfi-1)
-(use lalr)
-(use tlex)
-(use mgvm)
+(define-module taco2
+  (use srfi-1)
+  (use lalr)
+  (use tlex)
+  (use mgvm)
+  (export taco2 taco2-parser))
+(select-module taco2)
 
-(define taco
+(define taco2-parser
   (lalr-parser
    ;; (expect: 0)   
    ;; --- token definitions
@@ -433,7 +436,6 @@
 ;;;
 ;;;  RUNTIME LIBRARIES (Called through MGVM)
 ;;;
-
 (define (taco-print o)
   (if (number? o)
       (begin (display o)
@@ -441,18 +443,9 @@
       (display o)))
 
 ;;;
-;;;   MAIN
+;;;  API
 ;;;
-(use ggc.port.mirroring)
+(define (taco2) (taco2-parser tlex error))
 
-
-(define (main args)
-  (if (= (length args) 2)
-      (with-input-from-file/mirroring-to-port
-       (cadr args)
-       (current-output-port)
-       (lambda () (taco tlex error)))
-      (taco tlex error))
-  0)
-
+(provide "taco2")
 ;;; EOF

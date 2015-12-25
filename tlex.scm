@@ -589,4 +589,5 @@
 		     ((cadr cmd))
 		     (sc-ignore))))))))
 
+(provide "tlex")
 ;; EOF

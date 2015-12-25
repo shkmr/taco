@@ -4,8 +4,7 @@ insn.html : make-insn-table.scm
 	gosh make-insn-table.scm > insn.html
 
 run-taco2 :
-	gosh -I. -Ilalr -I../../ggc-messedup/taco taco2.scm test.taco
-
+	gosh -fload-verbose -I../../ggc-messedup/taco -Ilalr -I. tc2.scm test.taco
 
 check : check-tlex check-ika check-taco0
 

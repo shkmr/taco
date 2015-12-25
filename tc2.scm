@@ -1,0 +1,8 @@
+(use taco2)
+(use ggc.port.mirroring)
+(define (main args)
+  (print args)
+  (if (= (length args) 2)
+    (with-input-from-file/mirroring-to-port (list-ref args 1) (current-output-port)  taco2)
+    (taco2))
+  0)
