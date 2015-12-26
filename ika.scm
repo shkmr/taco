@@ -10,6 +10,8 @@
           vm-dump-code
           vm-code->list
           make-identifier
+          integer-fits-insn-arg?
+          unsigned-integer-fits-insn-arg?
           compile
           compile-p1
           compile-p2
@@ -28,6 +30,8 @@
             syms)))
 (import-from gauche.internal
              make-identifier
+             integer-fits-insn-arg?
+             unsigned-integer-fits-insn-arg?
              compile
              compile-p1
              compile-p2
