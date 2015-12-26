@@ -66,6 +66,21 @@
                (RET)
                ))
 
+(define test-code6
+  '(%top-level (0 0)
+               (info "(lambda (x) (case x ((fobar) 'yes) (else 'no)))")
+               (CLOSURE) (fo (1 0)
+                             (info "x")
+                             (LREF0)
+                             (BNEQC) fobar (label 1)
+                             (CONST-RET) yes
+                             (label 1)
+                             (CONST-RET) no)
+               (info "(define (fo x) ...)")
+               (DEFINE 0) (mkid fo)
+               (RET)
+               ))
+
 ;;; ToDo: write test case for ``codes'' operand type.
 
 (define (a name code)
@@ -83,6 +98,7 @@
 (a "test-code3" test-code3)
 (a "test-code4" test-code4)
 (a "test-code5" test-code5)
+(a "test-code6" test-code6)
 (newline)
 
 (test* "const-ret"             2     (vm-code-execute! (ika->vm-code test-code1) (interaction-environment)))
@@ -94,6 +110,7 @@
 (test* "(define (fo x) ...)" 'fo     (vm-code-execute! (ika->vm-code test-code5) (interaction-environment)))
 (test* "(fo 'fobar)" 'yes (fo 'fobar))
 (test* "(fo 'fobaz)" 'no  (fo 'fobaz))
+(test* "info test" 'fo               (vm-code-execute! (ika->vm-code test-code6) (interaction-environment)))
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
