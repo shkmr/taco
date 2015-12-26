@@ -451,11 +451,7 @@
 ;;;  API
 ;;;
 (define (taco2)
-  (guard (e ((is-a? e <error>)
-             (cons 'ERROR (ref e 'message)))
-            (else
-             (error "Unexpected exception")))
-    (taco2-parser tlex error)))
+  (taco2-parser tlex error))
 
 (define (taco2-load file)       (with-input-from-file file taco2))
 (define (taco2-eval-string str) (with-input-from-string str taco2))

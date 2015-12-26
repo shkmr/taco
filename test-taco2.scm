@@ -11,8 +11,11 @@
   (test in out (lambda ()
                  (with-output-to-port taco.out
                    (lambda ()
-                     (taco2-eval-string in))))))
-
+                     (guard (e ((is-a? e <error>)
+                                (cons 'ERROR (ref e 'message)))
+                               (else
+                                (error "Unexpected exception")))
+                       (taco2-eval-string in)))))))
 
 (define simple1 "\
 # Simple stmt
@@ -87,6 +90,51 @@ print \"A=\", A, \", B=\", B, \"\n\"
 (run-test "if (1!=1) print(10) else print (20)\n"  *undef*)
 (run-test "if (1==1) print(10) else print (20)\n"  *undef*)
 
+(test-section "function. check taco2.out for compiled codes.")
+(run-test "\
+func fact(1) {
+  if ($1 == 0) { 
+     return  1
+  } else {
+     return  $1*fact($1 - 1)
+  }
+}
+
+fact(5)
+" 120)
+
+(run-test "\
+func fact2(1) {
+  if ($1 == 0) return 1 else return $1*fact($1 - 1)
+}
+
+fact2(5)
+" 120)
+
+(run-test "\
+func ack(2) {
+     print $1, \" \", $2, \"\\n\"
+     if ($1 == 0) return $2+1
+     if ($2 == 0) return ack($1-1, 1)
+     return ack($1-1, ack($1, $2-1))
+}
+
+ack(2,2)
+" 7)
+
+(run-test "\
+func tak(3) {
+  print $1, \" \", $2, \" \" , $3,\"\\n\"
+  if ($1 <= $2) {
+    return $3
+  } else {
+    return tak(tak($1-1, $2, $3), tak($2-1, $3, $1), tak($3-1, $1, $2))
+  }
+}
+
+tak(7,5,3)
+" 4)
+          
 (close-port taco.out)
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
