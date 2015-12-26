@@ -68,7 +68,7 @@
 ;;
 (define test4
   '(
-    (LAMBDA 0 0) ((PRE-TAIL 1) 
+    (LAMBDA 0 0) ((PRE-TAIL 1)
                   "hello, world"
                   (PUSH)
                   (GREF) print
@@ -105,7 +105,7 @@
 ;;
 (define test7
   '(
-    (LAMBDA 1 0) ( 
+    (LAMBDA 1 0) (
                   ;; (PRE-CALL 1) ((LREF0-PUSH)
                   ;;   (GREF) ,print
                   ;;   (CALL 1))
@@ -163,7 +163,7 @@
 ;;                     (lp (- n 1) (+ s n))))))
 ;;    (lp n 0)))
 ;;
-(define test10 
+(define test10
   '((LAMBDA 1 0) ((LET 1) ((LAMBDA 2 0) (
                                          (LREF1-PUSH) ; n
                                          0
@@ -239,6 +239,3 @@
     )
   0)
 ;; EOF
-
-
-
