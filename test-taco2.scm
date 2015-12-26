@@ -93,7 +93,7 @@ print \"A=\", A, \", B=\", B, \"\n\"
 (test-section "function. check taco2.out for compiled codes.")
 (run-test "\
 func fact(1) {
-  if ($1 == 0) { 
+  if ($1 == 0) {
      return  1
   } else {
      return  $1*fact($1 - 1)
@@ -134,7 +134,7 @@ func tak(3) {
 
 tak(7,5,3)
 " 4)
-          
+
 (close-port taco.out)
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
