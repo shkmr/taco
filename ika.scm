@@ -59,6 +59,16 @@
       (format #t "~va~4,' d ~s ~s ~s; ~s~%" level "" n opcode obj addr info)
       (format #t "~va~4,' d ~s ~s ~s~%"     level "" n opcode obj addr)))
 
+  (define (pcode level n opcode name args info)
+    (if info
+      (format #t "~va~4,' d ~s (~s ~s ; ~s~%" level "" n opcode name args info)
+      (format #t "~va~4,' d ~s (~s ~s%"       level "" n opcode name args)))
+
+  (define (pcodes level n opcode info)
+    (if info
+      (format #t "~va~4,' d ~s ( ; ~s~%" level "" n opcode info)
+      (format #t "~va~4,' d ~s (~%"      level "" n opcode)))
+
   (define (ff cp level n i)
     (cond ((null? cp) #t)
 
@@ -86,11 +96,7 @@
                          (p1 level n opcode operand i)
                          (ff (vm-code->list operand) (+ level 4) 0 #f))
                         ((and (pair? operand) (symbol? (car operand)))
-                         (if i
-                           (format #t "~va~4,' d ~s (~s ~s ; ~s~%"
-                                   level "" n opcode (car operand) (cadr operand) i)
-                           (format #t "~va~4,' d ~s (~s ~s%"
-                                   level "" n opcode (car operand) (cadr operand)))
+                         (pcode level n opcode (car operand) (cadr operand) i)
                          (ff (cddr operand) (+ level 4) 0 #f)
                          (format #t "~va     )~%" level ""))
                         (else
@@ -104,9 +110,7 @@
                   (if (not (pair? operand))
                     (error "ika: operand has to be list of codes, but got " operand))
                   (cond ((and (pair? (car operand)) (symbol? (caar operand)))
-                         (if i
-                           (format #t "~va~4,' d ~s ( ; ~s~%" level "" n opcode i)
-                           (format #t "~va~4,' d ~s (~%" level "" n opcode))
+                         (pcodes level n opcode i)
                          (for-each (lambda (prog)
                                      (format #t "~va     (~s ~s~%"
                                              level "" (car prog) (cadr prog))
@@ -116,9 +120,7 @@
                          (format #t "~va     )~%" level ""))
 
                         (else
-                         (if i
-                           (format #t "~va~4,' d ~s ( ; ~s~%" level "" n opcode i)
-                           (format #t "~va~4,' d ~s (~%" level "" n opcode))
+                         (pcodes level n opcode i)
                          (for-each (lambda (cc)
                                      (format #t "~va       ~s~%" level "" cc)
                                      (if (is-a? cc <compiled-code>)
