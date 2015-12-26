@@ -44,30 +44,37 @@
 ;;;
 (define (ika/pp prog)
 
+  (define (pn level n) (format #t "~va~4,' d " level "" n))
+
   (define (p0 level n opcode info)
+    (pn level n)
     (if info
-      (format #t "~va~4,' d ~s ; ~s~%" level "" n opcode info)
-      (format #t "~va~4,' d ~s~%"      level "" n opcode)))
+      (format #t "~s ; ~s~%" opcode info)
+      (format #t "~s~%"      opcode)))
 
   (define (p1 level n opcode operand info)
+    (pn level n)
     (if info
-      (format #t "~va~4,' d ~s ~s; ~s~%" level "" n opcode operand info)
-      (format #t "~va~4,' d ~s ~s~%"     level "" n opcode operand)))
+      (format #t "~s ~s; ~s~%" opcode operand info)
+      (format #t "~s ~s~%"     opcode operand)))
 
   (define (p2 level n opcode obj addr info)
+    (pn level n)
     (if info
-      (format #t "~va~4,' d ~s ~s ~s; ~s~%" level "" n opcode obj addr info)
-      (format #t "~va~4,' d ~s ~s ~s~%"     level "" n opcode obj addr)))
+      (format #t "~s ~s ~s; ~s~%" opcode obj addr info)
+      (format #t "~s ~s ~s~%"     opcode obj addr)))
 
   (define (pcode level n opcode name args info)
+    (pn level n)
     (if info
-      (format #t "~va~4,' d ~s (~s ~s ; ~s~%" level "" n opcode name args info)
-      (format #t "~va~4,' d ~s (~s ~s%"       level "" n opcode name args)))
+      (format #t "~s (~s ~s ; ~s~%" opcode name args info)
+      (format #t "~s (~s ~s~%"      opcode name args)))
 
   (define (pcodes level n opcode info)
+    (pn level n)
     (if info
-      (format #t "~va~4,' d ~s ( ; ~s~%" level "" n opcode info)
-      (format #t "~va~4,' d ~s (~%"      level "" n opcode)))
+      (format #t "~s ( ; ~s~%" opcode info)
+      (format #t "~s (~%"      opcode)))
 
   (define (ff cp level n i)
     (cond ((null? cp) #t)
@@ -135,7 +142,7 @@
                       (addr   (caddr cp)))
                   (p2 level n opcode obj addr i)
                   (ff (cdddr cp) level (+ n 3) #f)))
-               
+
                (else
                 (p1 level  n (car cp) (cadr cp) i)
                 (ff (cddr cp) level (+ n 2) #f)))))
