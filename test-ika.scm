@@ -1,6 +1,5 @@
 (use gauche.test)
 (use vmhack)
-;; (add-load-path ".") (add-load-path "./vmhack")
 (test-start "ika")
 (use ika)
 (test-module 'ika)
