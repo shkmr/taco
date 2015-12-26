@@ -44,37 +44,32 @@
 ;;;
 (define (ika/pp prog)
 
-  (define (pn level n) (format #t "~va~4,' d " level "" n))
+  (define (sp level n) (format #f "~va~4,' d " level "" n))
 
+  (define (pi level n str info)
+    (let ((str (string-append (sp level n) str)))
+      (display str)
+      (if info
+        (let ((len (string-length str)))
+          (if (< len 40)
+            (dotimes ((- 40 len)) (display #\space)))
+          (format #t "; ~,,,,40:s" info)))
+      (newline)))
+  
   (define (p0 level n opcode info)
-    (pn level n)
-    (if info
-      (format #t "~s ; ~s~%" opcode info)
-      (format #t "~s~%"      opcode)))
-
+    (pi level n (format #f "~s" opcode) info))
+  
   (define (p1 level n opcode operand info)
-    (pn level n)
-    (if info
-      (format #t "~s ~s; ~s~%" opcode operand info)
-      (format #t "~s ~s~%"     opcode operand)))
+    (pi level n (format #f "~s ~s" opcode operand) info))
 
   (define (p2 level n opcode obj addr info)
-    (pn level n)
-    (if info
-      (format #t "~s ~s ~s; ~s~%" opcode obj addr info)
-      (format #t "~s ~s ~s~%"     opcode obj addr)))
+    (pi level n (format #f "~s ~s ~s" opcode obj addr) info))
 
   (define (pcode level n opcode name args info)
-    (pn level n)
-    (if info
-      (format #t "~s (~s ~s ; ~s~%" opcode name args info)
-      (format #t "~s (~s ~s~%"      opcode name args)))
+    (pi level n (format #f "~s (~s ~s" opcode name args) info))
 
   (define (pcodes level n opcode info)
-    (pn level n)
-    (if info
-      (format #t "~s ( ; ~s~%" opcode info)
-      (format #t "~s (~%"      opcode)))
+    (pi level n (format #f "~s (" opcode) info))
 
   (define (ff cp level n i)
     (cond ((null? cp) #t)
