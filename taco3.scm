@@ -129,28 +129,28 @@
     )
    ))
 
-(define *ika* #f)
 ;;;
 ;;;  COMPILER
 ;;;
+(define *ika* #f)
+
 (define (taco-compile-and-run tree)
   (let ((result #f))
 
     (print "tree: " tree)
     (set! *ika* `(%top-level (0 0)
-                                       ,@(tacomp tree 0 #f)
-                                       (RET)))
+                             ,@(tacomp tree 0 #f)
+                             (RET)))
     (ika/pp *ika*)
     (set! result (vm-code-execute! (ika->vm-code *ika*) (interaction-environment)))
     (print "=> " result)
     result))
 
 ;;
-;; Common routine for binary op.
+;;
 ;;
 (define (const? e)    (eq? 'CONST (caar e)))
 (define (const-val e) (cadr e))
-
 
 (define (binary-op op proc d1 d2)
   (cond ((and (const? d1)

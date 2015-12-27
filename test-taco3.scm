@@ -16,8 +16,8 @@
                                (else
                                 (error "Unexpected exception")))
                        (let* ((val  (taco3-eval-string in))
-                              (code (with-module taco3 *ika*)))
-                         (list code val))))))))
+                              (ika (with-module taco3 *ika*)))
+                         (list ika val))))))))
 
 (test-section "simple expr")
 (run-test "1\n"             '((%top-level (0 0)
@@ -119,6 +119,22 @@
                                             (NUMSUB2)
                                             (RET))
                                 ,(- 1.0 A)))
+
+(run-test "1.0*A\n"           `((%top-level (0 0)
+                                            (CONST) 1.0
+                                            (PUSH)
+                                            (GREF) (mkid A)
+                                            (NUMMUL2)
+                                            (RET))
+                                ,(* 1.0 A)))
+
+(run-test "1.0/A\n"           `((%top-level (0 0)
+                                            (CONST) 1.0
+                                            (PUSH)
+                                            (GREF) (mkid A)
+                                            (NUMDIV2)
+                                            (RET))
+                                ,(/ 1.0 A)))
 
 (close-port taco.out)
 
