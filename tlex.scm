@@ -58,6 +58,7 @@
     (&           &)
     (^           ^)
     (?           ?)
+    (!           !)
     ))
 
 (define typedefed-identifiers '())
