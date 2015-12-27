@@ -88,7 +88,7 @@
     (expr * expr)           : (list 'MUL $1 $3)
     (expr / expr)           : (list 'DIV $1 $3)
     (expr ^ expr)           : (list 'POW $1 $3)
-    (- expr (prec: uminus)) : (list 'SUB 0 $2)
+    (- expr (prec: uminus)) : (list 'NEGATE $2)
     (expr > expr)           : (list 'FUNCALL '>  (list $1 $3))
     (expr >= expr)          : (list 'FUNCALL '>= (list $1 $3))
     (expr <  expr)          : (list 'FUNCALL '<  (list $1 $3))
@@ -132,40 +132,35 @@
 ;;;
 ;;;  COMPILER
 ;;;
-(define *ika* #f)
+(define *ika* #f)   ; last complied ika code. (used in test-taco3.scm)
 
 (define (taco-compile-and-run tree)
-  (let ((result #f))
-
+  (let ((result #f) (vmcode #f))
+    (print "**********************************************************************")
     (print "tree: " tree)
-    (set! *ika* `(%top-level (0 0)
-                             ,@(tacomp tree 0 #f)
-                             (RET)))
+    (reset-label)
+    (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
+    (print "=== ika program ===")
     (ika/pp *ika*)
-    (set! result (vm-code-execute! (ika->vm-code *ika*) (interaction-environment)))
+    (set! vmcode (ika->vm-code *ika*))
+    (vm-dump-code vmcode)
+    (set! result (vm-code-execute! vmcode (interaction-environment)))
     (print "=> " result)
     result))
 
 ;;
-;;
-;;
 (define (const? e)    (eq? 'CONST (caar e)))
 (define (const-val e) (cadr e))
 
-(define (binary-op op proc d1 d2)
-  (cond ((and (const? d1)
-              (const? d2))
-         (list '(CONST) (proc (const-val d1) (const-val d2))))
-        (else
-         `(,@d1
-           (PUSH)
-           ,@d2
-           ,op))))
+(define *labelno* 0)
+(define (new-label)   (inc! *labelno*) *labelno*)
+(define (reset-label) (set! *labelno* 0))
 
+;;
 (define (tacomp tree level indefn)
   ;;
   ;; indefn : #f  -> toplevel
-  ;;        : num -> # of args of the func being defn'ed
+  ;;        : int -> # of args of the func being defn'ed
   ;;
   ;; level  : # of env levels (0 = toplevel)
   ;;
@@ -227,17 +222,43 @@
       ((MUL)
        (let ((d1 (tacomp (op-arg1 tree) level indefn))
              (d2 (tacomp (op-arg2 tree) level indefn)))
-         (binary-op '(NUMMUL2) * d1 d2)))
-
+         (if (and (const? d1) (const? d2))
+           (list '(CONST) (* (const-val d1) (const-val d2)))
+           `(,@d1
+             (PUSH)
+             ,@d2
+             (NUMMUL2)))))
       ((DIV)
        (let ((d1 (tacomp (op-arg1 tree) level indefn))
              (d2 (tacomp (op-arg2 tree) level indefn)))
-         (binary-op '(NUMDIV2) / d1 d2)))
+         (if (and (const? d1) (const? d2))
+           (list '(CONST) (/ (const-val d1) (const-val d2)))
+           `(,@d1
+             (PUSH)
+             ,@d2
+             (NUMDIV2)))))
 
       ((POW)
        (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn)))
-         (binary-op 'expt expt d1 d2)))
+             (d2 (tacomp (op-arg2 tree) level indefn))
+             (L1 (new-label)))
+         (if (and (const? d1) (const? d2))
+           (list '(CONST) (expt (const-val d1) (const-val d2)))
+           `((PRE-CALL 2) (label ,L1)
+             ,@d1
+             (PUSH)
+             ,@d2
+             (PUSH)
+             (GREF) (mkid expt)    ; or GREF-CALL?
+             (CALL 2)
+             (label ,L1)))))
+
+      ((NEGATE)
+       (let ((d1 (tacomp (op-arg1 tree) level indefn)))
+         (if (const? d1)
+           (list '(CONST) (- (const-val d1)))
+           `(,@d1
+             (NEGATE)))))
 
       ((NEQ)
        (let ((e1 (tacomp (op-arg1 tree) level indefn))
@@ -364,67 +385,7 @@
        (error "not implemented yet"))))))
 
 ;;;
-;;;  LINKER
-;;;
-(define (tacolin prog)
-
-  (define (inst? x) (and (pair? x) (symbol? (car x))))
-  (define (inst-name x) (car   x))
-  (define (inst-args x) (cdr   x))
-  (define (inst-arg1 x) (cadr  x))
-  (define (inst-arg2 x) (caddr x))
-
-  (let ((tab (make-hash-table)))
-
-    (define (pass1 prog)
-      (if (null? prog)
-          #t
-          (cond
-           ((inst? (car prog))
-            (case (inst-name (car prog))
-              ((QUOTE)
-               (pass1 (cddr prog)))
-              ((label)
-               (hash-table-put! tab
-                                (inst-arg1 (car prog))
-                                (cdr prog))
-               (set-car! prog '(NOP))   ; replace (label sym) by (NOP)
-               (pass1 (cdr prog)))
-              (else
-               (pass1 (cdr prog)))))
-           ((pair? (car prog))
-            (pass1 (car prog))
-            (pass1 (cdr prog)))
-           (else
-            (pass1 (cdr prog))))))
-
-    (define (pass2 prog)
-      (if (null? prog)
-          #t
-          (cond
-           ((inst? (car prog))
-            (case (inst-name (car prog))
-              ((QUOTE)
-               (pass2 (cddr prog)))
-              ((goto)
-               (let ((p (hash-table-get tab (inst-arg1 (car prog)))))
-                 (set-car! prog '(NOP)) ;  replace (goto sym) by (NOP)
-                 (set-cdr! prog p)      ;  and link
-                 ;; we don't have to run pass2 on shared structure
-                 ))
-              (else
-               (pass2 (cdr prog)))))
-           ((pair? (car prog))
-            (pass2 (car prog))
-            (pass2 (cdr prog)))
-           (else
-            (pass2 (cdr prog))))))
-
-    (pass1 prog)
-    (pass2 prog)))
-
-;;;
-;;;  RUNTIME LIBRARIES (Called through MGVM)
+;;;  RUNTIME LIBRARIES
 ;;;
 (define (taco-print o) (display o))
 
@@ -437,12 +398,9 @@
 ;;;
 ;;;  API
 ;;;
-(define (taco3)
-  (taco3-parser tlex error))
-
+(define (taco3)                 (taco3-parser tlex error))
 (define (taco3-load file)       (with-input-from-file file taco3))
 (define (taco3-eval-string str) (with-input-from-string str taco3))
-
 
 (provide "taco3")
 ;;; EOF

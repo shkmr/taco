@@ -104,6 +104,22 @@
                                             (RET))
                                 ,(+ 1.0 A)))
 
+(run-test "-1\n"              `((%top-level (0 0)
+                                            (CONST) -1
+                                            (RET))
+                                -1))
+
+(run-test "-1.0\n"             `((%top-level (0 0)
+                                             (CONST) -1.0
+                                             (RET))
+                                 -1.0))
+
+(run-test "-A\n"              `((%top-level (0 0)
+                                            (GREF) (mkid A)
+                                            (NEGATE)
+                                            (RET))
+                                ,(- A)))
+
 (run-test "A-1.0\n"           `((%top-level (0 0)
                                             (GREF) (mkid A)
                                             (PUSH)
@@ -135,6 +151,23 @@
                                             (NUMDIV2)
                                             (RET))
                                 ,(/ 1.0 A)))
+
+(run-test "2^3\n"             '((%top-level (0 0)
+                                            (CONST) 8
+                                            (RET))
+                                8))
+
+(run-test "A^3\n"             '((%top-level (0 0)
+                                            (PRE-CALL 2) (label 1)
+                                            (GREF) (mkid A)
+                                            (PUSH)
+                                            (CONST) 3
+                                            (PUSH)
+                                            (GREF) (mkid expt) ; become GREF-CALL!
+                                            (CALL 2)
+                                            (label 1)
+                                            (RET))
+                                8.0))
 
 (close-port taco.out)
 
