@@ -12,6 +12,7 @@
                  (with-output-to-port taco.out
                    (lambda ()
                      (guard (e ((is-a? e <error>)
+                                (report-error e)
                                 (cons 'ERROR (ref e 'message)))
                                (else
                                 (error "Unexpected exception")))
@@ -186,6 +187,54 @@
                                             (label 1)
                                             (RET))
                                 8.0))
+
+(test-section "NUMCMP")
+(run-test "1 > 2\n"           '((%top-level (0 0)
+                                            (CONST) 1
+                                            (PUSH)
+                                            (CONST) 2
+                                            (NUMGT2)
+                                            (RET))
+                                #f))
+(run-test "1 >= 2\n"          '((%top-level (0 0)
+                                            (CONST) 1
+                                            (PUSH)
+                                            (CONST) 2
+                                            (NUMGE2)
+                                            (RET))
+                                #f))
+(run-test "1 < 2\n"           '((%top-level (0 0)
+                                            (CONST) 1
+                                            (PUSH)
+                                            (CONST) 2
+                                            (NUMLT2)
+                                            (RET))
+                                #t))
+(run-test "1 <= 2\n"          '((%top-level (0 0)
+                                            (CONST) 1
+                                            (PUSH)
+                                            (CONST) 2
+                                            (NUMLE2)
+                                            (RET))
+                                #t))
+
+(run-test "! 1\n"             '((%top-level (0 0)
+                                            (CONST) 1
+                                            (NOT)
+                                            (RET))
+                                #f))
+
+(run-test "expt(3,2)\n"        '((%top-level (0 0)
+                                             (PRE-CALL 2) (label 1)
+                                             (CONST) 3
+                                             (PUSH)
+                                             (CONST) 2
+                                             (PUSH)
+                                             (GREF) (mkid expt)
+                                             (CALL 2)
+                                             (label 1)
+                                             (RET))
+                                 9))
 
 (close-port taco.out)
 

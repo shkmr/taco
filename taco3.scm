@@ -89,15 +89,15 @@
     (expr / expr)           : (list 'DIV $1 $3)
     (expr ^ expr)           : (list 'POW $1 $3)
     (- expr (prec: uminus)) : (list 'NEGATE $2)
-    (expr > expr)           : (list 'FUNCALL '>   (list $1 $3))
-    (expr >= expr)          : (list 'FUNCALL '>=  (list $1 $3))
-    (expr <  expr)          : (list 'FUNCALL '<   (list $1 $3))
-    (expr <= expr)          : (list 'FUNCALL '<=  (list $1 $3))
-    (expr == expr)          : (list 'FUNCALL '=   (list $1 $3))
-    (expr != expr)          : (list 'NEQ $1 $3)
-    (expr && expr)          : (list 'FUNCALL 'and (list $1 $3))
-    (expr OROR expr)        : (list 'FUNCALL 'or  (list $1 $3))
-    (! expr)                : (list 'FUNCALL 'not (list $2))
+    (expr > expr)           : (list 'NUMCMP '((NUMGT2)) $1 $3)
+    (expr >= expr)          : (list 'NUMCMP '((NUMGE2)) $1 $3)
+    (expr <  expr)          : (list 'NUMCMP '((NUMLT2)) $1 $3)
+    (expr <= expr)          : (list 'NUMCMP '((NUMLE2)) $1 $3)
+    (expr == expr)          : (list 'NUMCMP '((NUMEQ2)) $1 $3)
+    (expr != expr)          : (list 'NUMCMP '((NUMEQ2) (NOT)) $1 $3)
+    (expr && expr)          : (list 'AND $1 $3)
+    (expr OROR expr)        : (list 'OR  $1 $3)
+    (! expr)                : (list 'NOT $2)
     )
 
    (prlist
@@ -259,18 +259,19 @@
            `(,@d1
              (NEGATE)))))
 
-      ((NEQ)
-       (let ((e1 (tacomp (op-arg1 tree) level indefn))
-             (e2 (tacomp (op-arg2 tree) level indefn)))
-         `((PRE-CALL 1) ((PRE-CALL 2) (,@e1
-                                       (PUSH)
-                                       ,@e2
-                                       (PUSH)
-                                       (GREF) =
-                                       (CALL 2))
-                         (PUSH)
-                         (GREF) not
-                         (CALL 1)))))
+      ((NUMCMP)
+       (let ((insn (op-arg1 tree))
+             (d1   (tacomp (op-arg2 tree) level indefn))
+             (d2   (tacomp (op-arg3 tree) level indefn)))
+         `(,@d1
+           (PUSH)
+           ,@d2
+           ,@insn)))
+      
+      ((NOT)
+       (let ((d1 (tacomp (op-arg1 tree) level indefn)))
+         `(,@d1
+           (NOT))))
 
       ((VARREF)
        (let ((s (op-arg1 tree)))
@@ -280,18 +281,18 @@
        (let ((s (op-arg1 tree))
              (v (op-arg2 tree)))
          (if (= level 0)
-             `(,@(tacomp v level indefn)
-               (DEFINE 0) (mkid ,s))
-             `(,@(tacomp v level indefn)
-               (GSET) (mkdid ,s)))))
+           `(,@(tacomp v level indefn)
+             (DEFINE 0) (mkid ,s))
+           `(,@(tacomp v level indefn)
+             (GSET) (mkdid ,s)))))
 
       ((ARGREF)
        (if (= level 0)
-           (error "$n in top-level")
-           (let ((s (- (op-arg1 tree) 1)))
-             `((LREF ,(- level 1) ,(- indefn s 1))
-               )
-             )))
+         (error "$n in top-level")
+         (let ((s (- (op-arg1 tree) 1)))
+           `((LREF ,(- level 1) ,(- indefn s 1))
+             )
+           )))
 
       ((ARGSET)
        (if (= level 0)
@@ -304,16 +305,20 @@
 
       ((FUNCALL)
        (let* ((f    (op-arg1 tree))
-              (args (map (lambda (x) (tacomp x level indefn))
+              (args (map (lambda (x)
+                           (tacomp x level indefn))
                          (op-arg2 tree)))
               (n    (length args))
               (prep (append-map (lambda (x)
                                   (append x (list '(PUSH))))
-                                args)))
-         `((PRE-CALL ,n) (,@prep
-                          (GREF) ,f
-                          (CALL ,n)))))
-
+                                args))
+              (L1   (new-label)))
+         `((PRE-CALL ,n) (label ,L1)
+           ,@prep
+           (GREF) (mkid ,f)
+           (CALL ,n)
+           (label ,L1))))
+      
       ((IF)
        (let ((c (tacomp (op-arg1 tree) level indefn))
              (s (tacomp (op-arg2 tree) level indefn))
