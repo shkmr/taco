@@ -7,19 +7,24 @@
 
 (define *undef* (if #f #t))
 
-(define (run-test in out)
-  (test in out (lambda ()
+(define (run-test in expected)
+  (test in expected (lambda ()
                  (with-output-to-port taco.out
                    (lambda ()
                      (guard (e ((is-a? e <error>)
                                 (cons 'ERROR (ref e 'message)))
                                (else
                                 (error "Unexpected exception")))
+                       (print "***********************************************************")
+                       (display "input: ")
+                       (write in)
+                       (newline)
                        (let* ((val  (taco3-eval-string in))
                               (ika (with-module taco3 *ika*)))
                          (list ika val))))))))
 
-(test-section "simple expr")
+(newline)
+(test-section "constant expr")
 (run-test "1\n"             '((%top-level (0 0)
                                           (CONST) 1
                                           (RET))
@@ -55,7 +60,20 @@
                                           (RET))
                               3))
 
-(define A 2.0)
+(newline)
+(test-section "referring global variable.")
+(test* "Make sure A is not bound."  (test-error <error>) A
+       (lambda (expected actual)
+         (string-scan (slot-ref actual 'message) "unbound variable:")))
+
+(run-test "A=2.0\n"
+          `((%top-level (0 0)
+                        (CONST) 2.0
+                        (DEFINE 0) (mkid A)
+                        (RET))
+            A))
+
+(test* "Now A is bound."  2.0 A)
 
 (run-test "A\n"              `((%top-level (0 0)
                                            (GREF) (mkid A)

@@ -6,7 +6,7 @@ insn.html : make-insn-table.scm
 mgvm.log :
 	gosh -I. test-mgvm.scm v > mgvm.log
 
-check : check-taco2 check-tlex check-ika check-taco0
+check : check-taco3 check-taco2 check-tlex check-ika check-taco0
 
 check-taco3 :
 	gosh -Ilalr -I. -Ivmhack test-taco3.scm > test-taco3.log
