@@ -1,8 +1,7 @@
 insn.html
-taco0.out
-taco2.out
 *~
 *.log
 *.so
 *.o
 *.gpd
+*.out
