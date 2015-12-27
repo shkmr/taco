@@ -363,12 +363,15 @@
 
       ((PRINT)
        (let* ((args (map (lambda (x) (tacomp x level indefn))
-                         (op-arg1 tree))))
+                         (op-arg1 tree)))
+              (L1   (new-label)))   ; XXX relying on how ika treats label...
          (append-map (lambda (item)
-                       `((PRE-CALL 1) (,@item
-                                       (PUSH)
-                                       (GREF) ,taco-print
-                                       (CALL 1))))
+                       `((PRE-CALL 1) (label ,L1)
+                         (CONST) ,@item
+                         (PUSH)
+                         (GREF) (mkid display)
+                         (CALL 1)
+                         (label ,L1)))
                      args)))
 
       ((BEGIN)

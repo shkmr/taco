@@ -224,6 +224,7 @@
                                             (RET))
                                 #f))
 
+(test-section "funcall")
 (run-test "expt(3,2)\n"        '((%top-level (0 0)
                                              (PRE-CALL 2) (label 1)
                                              (CONST) 3
@@ -235,6 +236,34 @@
                                              (label 1)
                                              (RET))
                                  9))
+
+(test-section "print")
+(run-test "print \"hello, world\"\n" `((%top-level (0 0)
+                                                      (PRE-CALL 1) (label 1)
+                                                      (CONST) "hello, world"
+                                                      (PUSH)
+                                                      (GREF) (mkid display)
+                                                      (CALL 1)
+                                                      (label 1)
+                                                      (RET))
+                                          ,*undef*))
+
+(run-test "print \"hello,\", \" world\"\n"
+          `((%top-level (0 0)
+                        (PRE-CALL 1) (label 1)
+                        (CONST) "hello,"
+                        (PUSH)
+                        (GREF) (mkid display)
+                        (CALL 1)
+                        (label 1)
+                        (PRE-CALL 1) (label 1)
+                        (CONST) " world"
+                        (PUSH)
+                        (GREF) (mkid display)
+                        (CALL 1)
+                        (label 1)
+                        (RET))
+            ,*undef*))
 
 (close-port taco.out)
 
