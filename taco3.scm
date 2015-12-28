@@ -369,15 +369,15 @@
       ((PRINT)
        (let* ((args (map (lambda (x) (tacomp x level indefn))
                          (op-arg1 tree)))
-              (L1   (new-label)))   ; XX should make a new label for each args
-         (append-map (lambda (item)
-                       `((PRE-CALL 1) (label ,L1)
+              (lbls (map (lambda (x) (new-label)) args)))
+         (append-map (lambda (item label)
+                       `((PRE-CALL 1) (label ,label)
                          (CONST) ,@item
                          (PUSH)
                          (GREF) (mkid display)
                          (CALL 1)
-                         (label ,L1)))
-                     args)))
+                         (label ,label)))
+                     args lbls)))
 
       ((BEGIN)
        (append-map (lambda (x) (tacomp x level indefn))

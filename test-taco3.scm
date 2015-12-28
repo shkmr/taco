@@ -256,12 +256,12 @@
                         (GREF) (mkid display)
                         (CALL 1)
                         (label 1)
-                        (PRE-CALL 1) (label 1)
+                        (PRE-CALL 1) (label 2)
                         (CONST) " world"
                         (PUSH)
                         (GREF) (mkid display)
                         (CALL 1)
-                        (label 1)
+                        (label 2)
                         (RET))
             ,*undef*))
 
