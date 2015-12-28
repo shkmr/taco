@@ -84,12 +84,11 @@
 ;;; ToDo: write test case for ``codes'' operand type.
 
 (define (a name code)
-  (display "*****: ")
-  (print name)
+  (print name " **************************************")
   (ika/pp code)
-  (print "====> ")
+  #;(print "====> ")
   (let ((cc (ika->vm-code code)))
-    (ika/pp (append '(%top-level (0 0))
+    #;(ika/pp (append '(%top-level (0 0))
                     (vm-code->list cc)))
     (vm-dump-code cc)))
 
@@ -101,16 +100,18 @@
 (a "test-code6" test-code6)
 (newline)
 
-(test* "const-ret"             2     (vm-code-execute! (ika->vm-code test-code1) (interaction-environment)))
-(test* "(1+2)*(3+4)"          21     (vm-code-execute! (ika->vm-code test-code2) (interaction-environment)))
-(test* "(define (hello) ...)" 'hello (vm-code-execute! (ika->vm-code test-code3) (interaction-environment)))
+(define (run code) (vm-code-execute! (ika->vm-code code) (interaction-environment)))
+
+(test* "const-ret"             2     (run test-code1))
+(test* "(1+2)*(3+4)"          21     (run test-code2))
+(test* "(define (hello) ...)" 'hello (run test-code3))
 (test* "(hello)" "hello, world\n" (with-output-to-string hello))
-(test* "(define (fact n) ...)" 'fact (vm-code-execute! (ika->vm-code test-code4) (interaction-environment)))
+(test* "(define (fact n) ...)" 'fact (run test-code4))
 (test* "(fact 5)" 120 (fact 5))
-(test* "(define (fo x) ...)" 'fo     (vm-code-execute! (ika->vm-code test-code5) (interaction-environment)))
+(test* "(define (fo x) ...)" 'fo     (run test-code5))
 (test* "(fo 'fobar)" 'yes (fo 'fobar))
 (test* "(fo 'fobaz)" 'no  (fo 'fobaz))
-(test* "info test" 'fo               (vm-code-execute! (ika->vm-code test-code6) (interaction-environment)))
+(test* "info test" 'fo               (run test-code6))
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
