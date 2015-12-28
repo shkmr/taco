@@ -84,7 +84,7 @@
 ;;; ToDo: write test case for ``codes'' operand type.
 
 (define (a name code)
-  (print name " **************************************")
+  (print "*** " name " **************************************")
   (ika/pp code)
   #;(print "====> ")
   (let ((cc (ika->vm-code code)))
