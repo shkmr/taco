@@ -8,16 +8,6 @@
 #include <gauche/code.h>
 #include <gauche/prof.h>
 
-/* 
- *   FIXME: We include priv/builtin-syms.h from Gache build directory
- *   to get SCM_SYM_EVAL_BEFORE and SCM_SYM_EVAL_AFTER.
- *
- *   $ ln -s <GAUCHE_BUILD_DIR>/src/gauche .
- *
- *   We need to find a portable way to find pointers to these symbols.
- */
-#include \"gauche/priv/builtin-syms.h\"
-
 SCM_DECL_BEGIN
 
 ScmObj vm_code_execute(ScmObj v, ScmObj e);
@@ -67,9 +57,9 @@ ScmObj vm_code_execute(ScmObj v, ScmObj e)
            after eval */
         ScmObj body = Scm_MakeClosure(v, NULL);
         ScmObj before = Scm_MakeSubr(eval_restore_env, SCM_MODULE(e),
-                                     0, 0, SCM_SYM_EVAL_BEFORE);
+                                     0, 0, SCM_MAKE_STR(\"vmhack-before\"));
         ScmObj after = Scm_MakeSubr(eval_restore_env, (void*)vm->module,
-                                    0, 0, SCM_SYM_EVAL_AFTER);
+                                    0, 0, SCM_MAKE_STR(\"vmhack-after\"));
         return Scm_VMDynamicWind(before, body, after);
     } else {
         /* shortcut */
