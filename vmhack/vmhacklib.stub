@@ -15,37 +15,28 @@ ScmObj vm_code_execute(ScmObj v, ScmObj e);
 SCM_DECL_END
 
 /*
- *   From Gauche/src/vm.c 
+ *    vm_code_execute: execute ccb.
+ *
+ *    Used src/vm.c:Scm_VMEval() as starting point.
+ *    Changes are
+ *       - commented out compiler call.
+ *       - Use Scm_VM() instead of theVM.
+ *       - replace SCM_SYM_EVAL_{BEFORE,AFTER} by SCM_MAKE_STR().
  */
-#ifdef GAUCHE_USE_PTHREADS
-static pthread_key_t vm_key;
-#define theVM   ((ScmVM*)pthread_getspecific(vm_key))
-#elif  GAUCHE_USE_WTHREADS
-static DWORD vm_key;
-#define theVM   ((ScmVM*)TlsGetValue(vm_key))
-#else  /* !GAUCHE_USE_PTHREADS && !GAUCHE_USE_WTHREADS */
-static ScmVM *theVM;
-#endif /* !GAUCHE_USE_PTHREADS */
 
 static ScmObj eval_restore_env(ScmObj *args, int argc, void *data)
 {
-    theVM->module = SCM_MODULE(data);
+    Scm_VM()->module = SCM_MODULE(data);
     return SCM_UNDEFINED;
 }
 
-/*
- *   vm_code_execute: execute ccb.
- *
- *   Used src/vm.c:Scm_VMEval() as starting point.
- *   Just commented out compiler call.
- */
 /* For now, we only support a module as the evaluation environment */
 ScmObj vm_code_execute(ScmObj v, ScmObj e)
 {
     int restore_module = SCM_MODULEP(e);
-    ScmVM *vm = theVM;
+    ScmVM *vm = Scm_VM();
 
-    /* 
+    /*
        ScmObj v = Scm_Compile(expr, e);
        if (SCM_VM_COMPILER_FLAG_IS_SET(theVM, SCM_COMPILE_SHOWRESULT)) {
          Scm_CompiledCodeDump(SCM_COMPILED_CODE(v));
@@ -72,7 +63,7 @@ ScmObj vm_code_execute(ScmObj v, ScmObj e)
 }
 
 /*
- *   Module initialization function.
+ *    Module initialization function.
  */
 void Scm_Init_vmhacklib(ScmModule*);
 
