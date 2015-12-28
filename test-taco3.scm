@@ -276,7 +276,6 @@
                                           (label 1)
                                           (RET))
                               #f))
-                                          
 
 (run-test "if (1!=0) 20\n"  '((%top-level (0 0)
                                           (CONST) 1
@@ -320,7 +319,6 @@
                         (label 2)
                         (RET))
             10))
-          
 
 (close-port taco.out)
 
