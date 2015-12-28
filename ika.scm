@@ -55,10 +55,10 @@
             (dotimes ((- 40 len)) (display #\space)))
           (format #t "; ~,,,,40:s" info)))
       (newline)))
-  
+
   (define (p0 level n opcode info)
     (pi level n (format #f "~s" opcode) info))
-  
+
   (define (p1 level n opcode operand info)
     (pi level n (format #f "~s ~s" opcode operand) info))
 
@@ -152,9 +152,18 @@
 (define (ika->vm-code ika)
   (let ((name     (car ika))
         (reqargs  (caadr ika))
-        (optargs  (cadadr ika))
-        (labels   '()))
-    (let ((ccb (make-compiled-code-builder reqargs optargs name #f #f #f)))
+        (optargs  (cadadr ika)))
+
+    (let ((ccb (make-compiled-code-builder reqargs optargs name #f #f #f))
+          (labels '()))
+
+      (define (get-label-id label)
+        (cond ((assoc label labels) => cdr)
+              (else
+               (let ((lid (compiled-code-new-label ccb)))
+                 (push! labels (cons label lid))
+                 lid))))
+
       (let lp ((ika (cddr ika))
                (i   #f)
                (maxstack 0))  ; how do we set this?
@@ -164,8 +173,7 @@
 
               ;; pseduo insn.  label and info.
               ((and (pair? (car ika)) (eq? (caar ika) 'label))
-               (let ((lid (cond ((assoc (cadar ika) labels) => cdr)
-                                (else (error "ika: no such label" (cadar ika))))))
+               (let ((lid (get-label-id (cadar ika))))
                  (compiled-code-set-label! ccb lid)
                  (lp (cdr ika) #f maxstack)))
 
@@ -225,8 +233,7 @@
                       (let ((opcode (~ info'code))
                             (addr   (cadr ika)))
                         (cond ((and (pair? addr) (eq? 'label (car addr)))
-                               (let ((lid (compiled-code-new-label ccb)))
-                                 (push! labels (cons (cadr addr) lid))
+                               (let ((lid (get-label-id (cadr addr))))
                                  (compiled-code-emit2oi! ccb opcode arg0 arg1 lid i)))
                               ((integer? addr)
                                (compiled-code-emit2oi! ccb opcode arg0 arg1 addr i))
@@ -239,8 +246,7 @@
                             (obj     (cadr ika))
                             (addr    (caddr ika)))
                         (cond ((and (pair? addr) (eq? 'label (car addr)))
-                               (let ((lid (compiled-code-new-label ccb)))
-                                 (push! labels (cons (cadr addr) lid))
+                               (let ((lid (get-label-id (cadr addr))))
                                  ;; we know no args in this case.
                                  (compiled-code-emit0oi! ccb opcode (list obj lid) i)))
                               ((integer? addr)

@@ -369,7 +369,7 @@
       ((PRINT)
        (let* ((args (map (lambda (x) (tacomp x level indefn))
                          (op-arg1 tree)))
-              (L1   (new-label)))   ; XXX relying on how ika treats label...
+              (L1   (new-label)))   ; XX should make a new label for each args
          (append-map (lambda (item)
                        `((PRE-CALL 1) (label ,L1)
                          (CONST) ,@item
