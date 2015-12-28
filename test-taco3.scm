@@ -265,6 +265,63 @@
                         (RET))
             ,*undef*))
 
+(test-section "conditional. check taco2.out for compiled codes.")
+(run-test "if (1==0) 20\n"  '((%top-level (0 0)
+                                          (CONST) 1
+                                          (PUSH)
+                                          (CONST) 0
+                                          (NUMEQ2)
+                                          (BF) (label 1)
+                                          (CONST) 20
+                                          (label 1)
+                                          (RET))
+                              #f))
+                                          
+
+(run-test "if (1!=0) 20\n"  '((%top-level (0 0)
+                                          (CONST) 1
+                                          (PUSH)
+                                          (CONST) 0
+                                          (NUMEQ2)
+                                          (NOT)
+                                          (BF) (label 1)
+                                          (CONST) 20
+                                          (label 1)
+                                          (RET))
+                              20))
+
+(run-test "if (1!=1) 10 else 20\n"
+          '((%top-level (0 0)
+                        (CONST) 1
+                        (PUSH)
+                        (CONST) 1
+                        (NUMEQ2)
+                        (NOT)
+                        (BF)    (label 1)
+                        (CONST) 10
+                        (JUMP)  (label 2)
+                        (label 1)
+                        (CONST) 20
+                        (label 2)
+                        (RET))
+            20))
+
+(run-test "if (1==1) 10 else 20\n"
+          '((%top-level (0 0)
+                        (CONST) 1
+                        (PUSH)
+                        (CONST) 1
+                        (NUMEQ2)
+                        (BF)    (label 1)
+                        (CONST) 10
+                        (JUMP)  (label 2)
+                        (label 1)
+                        (CONST) 20
+                        (label 2)
+                        (RET))
+            10))
+          
+
 (close-port taco.out)
 
 ;; If you don't want `gosh' to exit with nonzero status even if

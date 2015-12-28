@@ -320,22 +320,27 @@
            (label ,L1))))
       
       ((IF)
-       (let ((c (tacomp (op-arg1 tree) level indefn))
-             (s (tacomp (op-arg2 tree) level indefn))
-             (l (gensym)))
+       (let ((c  (tacomp (op-arg1 tree) level indefn))
+             (s  (tacomp (op-arg2 tree) level indefn))
+             (L1 (new-label)))
          `(,@c
-           (IF) ,(append s (list (list 'goto l)))
-           (label ,l))))
+           (BF) (label ,L1)
+           ,@s
+           (label ,L1))))
 
       ((IFEL)
-       (let ((c (tacomp (op-arg1 tree) level indefn))
-             (s (tacomp (op-arg2 tree) level indefn))
-             (e (tacomp (op-arg3 tree) level indefn))
-             (l (gensym)))
+       (let ((c  (tacomp (op-arg1 tree) level indefn))
+             (s  (tacomp (op-arg2 tree) level indefn))
+             (e  (tacomp (op-arg3 tree) level indefn))
+             (L1 (new-label))
+             (L2 (new-label)))
          `(,@c
-           (IF) ,(append s (list (list 'goto l)))
+           (BF)   (label ,L1)
+           ,@s
+           (JUMP) (label ,L2)
+           (label ,L1)
            ,@e
-           (label ,l))))
+           (label ,L2))))
 
       ((WHILE)
        ;; note: calling closure with 0 argument does not push
@@ -390,17 +395,6 @@
 
       (else
        (error "not implemented yet"))))))
-
-;;;
-;;;  RUNTIME LIBRARIES
-;;;
-(define (taco-print o) (display o))
-
-(define (taco-print-o o)
-  (if (number? o)
-      (begin (display o)
-             (display " "))
-      (display o)))
 
 ;;;
 ;;;  API
