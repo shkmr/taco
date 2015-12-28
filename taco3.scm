@@ -267,7 +267,7 @@
            (PUSH)
            ,@d2
            ,@insn)))
-      
+
       ((NOT)
        (let ((d1 (tacomp (op-arg1 tree) level indefn)))
          `(,@d1
@@ -318,7 +318,7 @@
            (GREF) (mkid ,f)
            (CALL ,n)
            (label ,L1))))
-      
+
       ((IF)
        (let ((c  (tacomp (op-arg1 tree) level indefn))
              (s  (tacomp (op-arg2 tree) level indefn))
