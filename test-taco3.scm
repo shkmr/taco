@@ -320,6 +320,71 @@
                         (RET))
             10))
 
+(test-section "while. check taco2.out for compiled codes.")
+(run-test "\
+    i=10
+    while (i!=0) {
+        print i
+        i=i-1
+    }
+"
+    '((%top-level (0 0)
+                  (label 2)
+                  (GREF) (mkid i)
+                  (PUSH)
+                  (CONST) 0
+                  (NUMEQ2)
+                  (NOT)
+                  (BF) (label 3)
+                  (PRE-CALL 1) (label 1)
+                  (GREF) (mkid i)
+                  (PUSH)
+                  (GREF) (mkid display)
+                  (CALL 1)
+                  (label 1)
+                  (GREF) (mkid i)
+                  (NUMADDI -1)
+                  (DEFINE 0) (mkid i)
+                  (JUMP) (label 2)
+                  (label 3)
+                  (RET))
+      #f))
+
+(run-test "\
+    func fact(1) {
+        if ($1 == 0) return 1 else return $1*fact($1 - 1)
+    }
+"
+          '((%top-level (0 0)
+                        (CLOSURE) (fact (1 0)
+                                        (LREF 0 0)
+                                        (PUSH)
+                                        (CONST) 0
+                                        (NUMEQ2)
+                                        (BF) (label 2)
+                                        (CONST) 1
+                                        (RET)
+                                        (JUMP) (label 3)
+                                        (label 2)
+                                        (LREF 0 0)
+                                        (PUSH)
+                                        (PRE-CALL 1) (label 1)
+                                        (LREF 0 0)
+                                        (NUMADDI -1)
+                                        (PUSH)
+                                        (GREF) (mkid fact)
+                                        (CALL 1)
+                                        (label 1)
+                                        (NUMMUL2)
+                                        (RET)
+                                        (label 3)
+                                        (RET))
+                        (DEFINE 0) (mkid fact)
+                        (RET))
+            fact))
+
+(test* "(fact 5)" 120 (fact 5))
+
 (close-port taco.out)
 
 ;; If you don't want `gosh' to exit with nonzero status even if

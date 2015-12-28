@@ -102,9 +102,9 @@
 
    (prlist
     (expr)                : (list $1)
-    (STRING)              : (list $1)
+    (STRING)              : (list (list 'CONSTANT $1))
     (prlist COMMA expr)   : (append $1 (list $3))
-    (prlist COMMA STRING) : (append $1 (list $3))
+    (prlist COMMA STRING) : (append $1 (list (list 'CONSTANT $3)))
     )
 
    (defn
@@ -284,7 +284,7 @@
            `(,@(tacomp v level indefn)
              (DEFINE 0) (mkid ,s))
            `(,@(tacomp v level indefn)
-             (GSET) (mkdid ,s)))))
+             (GSET) (mkid ,s)))))
 
       ((ARGREF)
        (if (= level 0)
@@ -343,28 +343,23 @@
            (label ,L2))))
 
       ((WHILE)
-       ;; note: calling closure with 0 argument does not push
-       ;;       enviroment. we only have to one level up, not two.
-       (let ((c (tacomp (op-arg1 tree) (+ level 1) indefn))
-             (s (tacomp (op-arg2 tree) (+ level 1) indefn))
-             (l (gensym)))
-         `((LET 1) ((LAMBDA 0 0) (,@c
-                                  (IF) ,(append s '((PRE-TAIL 0)
-                                                    (LREF0)
-                                                    (TAIL-CALL 0))))
-                    (LSET0)
-                    (PRE-CALL 0) ((LREF0)
-                                  (CALL 0))))))
+       (let ((c  (tacomp (op-arg1 tree) level indefn))
+             (s  (tacomp (op-arg2 tree) level indefn))
+             (L1 (new-label))
+             (L2 (new-label)))
+         `((label ,L1)
+           ,@c
+           (BF) (label ,L2)
+           ,@s
+           (JUMP) (label ,L1)
+           (label ,L2))))
 
       ((RETURN)
        (if indefn
-           (let ((r (tacomp (op-arg1 tree) level indefn)))
-             `((PRE-TAIL 1)
-               ,@r
-               (PUSH)
-               (LREF ,(- level 2) 0)
-               (TAIL-CALL 1)))
-           (error "RETURN outside defn")))
+         (let ((r (tacomp (op-arg1 tree) level indefn)))
+           `(,@r
+             (RET)))
+         (error "RETURN outside defn")))
 
       ((PRINT)
        (let* ((args (map (lambda (x) (tacomp x level indefn))
@@ -372,7 +367,7 @@
               (lbls (map (lambda (x) (new-label)) args)))
          (append-map (lambda (item label)
                        `((PRE-CALL 1) (label ,label)
-                         (CONST) ,@item
+                         ,@item
                          (PUSH)
                          (GREF) (mkid display)
                          (CALL 1)
@@ -387,11 +382,12 @@
        (let ((f (op-arg2 tree))
              (n (op-arg3 tree))
              (b (op-arg4 tree)))
-         `((LAMBDA ,n 0) ((PRE-CALL 1) ((LAMBDA 1 0) ,(tacomp b 2 n)
-                                        (PUSH)
-                                        (GREF) call/cc
-                                        (CALL 1)))
-           (DEFINE) ,f)))
+         (if (not indefn)
+           `((CLOSURE) (,f (,n 0)
+                           ,@(tacomp b 1 n)
+                           (RET))
+             (DEFINE 0) (mkid ,f))
+           (error "func has to be top level"))))
 
       (else
        (error "not implemented yet"))))))
