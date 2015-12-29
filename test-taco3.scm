@@ -502,7 +502,8 @@
 (test-end :exit-on-failure #t)
 
 (newline)
-(print "******************** Benchmark test ********************")
+(display "******************** Benchmark test ********************\n")
+(display "Running benchmark test...\n" (current-error-port))
 (use gauche.time)
 
 (define (stak x y z)
