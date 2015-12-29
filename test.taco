@@ -1,62 +1,31 @@
 #   TEST INPUT FOR TACO2
 #
 #
-# Simple expr
-1
-
-1+1
-
-(1+2)*3
-
-3*(3+2*(4+5))
-
-# Simple stmt
-{1
-2
-3}
-
-{1
-2+3}
-
-print 1
-
-print "hello, world\n"
-
-print 1,2,3
-
 A=1
-
 B=2
-
 print "A=", A, ", B=", B, "\n"
 
-if (1==0) print(20)
+if (1==0) print "1==0\n"
+if (1!=0) print "1!=0\n"
+if (1!=1) print "1!=0\n" else print "Not 1!=0\n"
 
-if (1!=0) print(10)
 
-if (1!=1) print(10) else print(20)
-
-# little complex
-
-{  if (A==B) {
-      print "A is euqal to B\n"
-   } else {
-      print "A is different to B\n"
-   }
-   print "That's what I see\n"
+if (A==B) {
+    print "A is equal to B, "
+} else {
+    print "A is different to B, "
 }
+print "because A=", A, ", B=", B, ".\n"
 
-{   A=2
-    B=2
+A=2
+B=2
+if (A==B) {
+    print "A is equal to B, "
+} else {
+    print "A is different to B, "
 }
+print "because A=", A, ", B=", B, ".\n"
 
-{  if (A==B) {
-       print "A is euqal to B\n"
-   } else {
-       print "A is different to B\n"
-   }
-   print "That's what I see\n"
-}
 
 
 # function definition
@@ -74,49 +43,79 @@ func moo(1) {
      return $1
 }
 
-func fact(1) {
-  if ($1 != 0) { 
-     return  $1*fact($1 - 1)
-  } else {
-     return  1
-  }
+func fact0(1) {
+    if ($1 == 0) return  1 else return $1*fact0($1 - 1)
+}
+
+func fact1(1) {
+    if ($1 == 0) return  1
+    return $1*fact1($1 - 1)
+}
+
+func fact2(1) {
+    if ($1 == 0) {
+        return  1
+    } else {
+        return  $1*fact2($1 - 1)
+    }
 }
 
 func ack(2) {
-     if ($1 == 0) return $2+1
-     if ($2 == 0) return ack($1-1, 1)
-     return ack($1-1, ack($1, $2-1))
+    if ($1 == 0) return $2+1
+    if ($2 == 0) return ack($1-1, 1)
+    return ack($1-1, ack($1, $2-1))
+}
+
+func fib(1) {
+   if ($1==0) return 0
+   if ($1==1) return 1
+   return fib($1-2)+fib($1-1)
 }
 
 # function call. we need to declare gobal variable .
-{   a=1
+{
+    a=1
     b=2
     c=3
 }
 
-proc fib(1) {
-     a = 0
+func fib_numbers(1) {
+     # a, b, and c is global...
+     a = 0  
      b = 1
+
+     print "fibonacci numbers up to ", $1, ": ", a
      while (b < $1) {
            c = b
            b = a + b
            a = c
-           print a, b, $1, "\n"           
+           print " ", a
      }
+     print "\n"
 }
 
+func fib_locals(4) {
+     # using local variables
+     $2 = 0  
+     $3 = 1
+     print "fibonacci numbers up to ", $1, ": ", $2
+     while ($3 < $1) {
+           $4 = $3
+           $3 = $2 + $3
+           $2 = $4
+           print " ", $2
+     }
+     print "\n"
+}
 
 moo(10)
-
 moo(foo(a,b,c))
+print "fact0(5)=", fact0(5), "\n"  # should be 120
+print "fact1(5)=", fact1(5), "\n"  # should be 120
+print "fact2(5)=", fact2(5), "\n"  # should be 120
+print "ack(3,3)=", ack(3,3), "\n"  # should be 61
+print "fib(10)=",  fib(10),  "\n"  # should be 55
 
+fib_numbers(100)
+fib_locals(100, 0, 0, 0)
 
-fact(5)  # should be 120
-
-ack(3,3) # should be 61
-
-i = 0
-while (i < 100) {
-      fib(i)
-      i = i + 1
-}
