@@ -355,39 +355,168 @@
         if ($1 == 0) return 1 else return $1*fact($1 - 1)
     }
 "
-          '((%top-level (0 0)
-                        (CLOSURE) (fact (1 0)
-                                        (LREF 0 0)
-                                        (PUSH)
-                                        (CONST) 0
-                                        (NUMEQ2)
-                                        (BF) (label 2)
-                                        (CONST) 1
-                                        (RET)
-                                        (JUMP) (label 3)
-                                        (label 2)
-                                        (LREF 0 0)
-                                        (PUSH)
-                                        (PRE-CALL 1) (label 1)
-                                        (LREF 0 0)
-                                        (NUMADDI -1)
-                                        (PUSH)
-                                        (GREF) (mkid fact)
-                                        (CALL 1)
-                                        (label 1)
-                                        (NUMMUL2)
-                                        (RET)
-                                        (label 3)
-                                        (RET))
-                        (DEFINE 0) (mkid fact)
-                        (RET))
-            fact))
+'((%top-level (0 0)
+      (CLOSURE) (fact (1 0)
+                      (LREF 0 0)
+                      (PUSH)
+                      (CONST) 0
+                      (NUMEQ2)
+                      (BF) (label 2)
+                      (CONST) 1
+                      (RET)
+                      (JUMP) (label 3)
+                      (label 2)
+                      (LREF 0 0)
+                      (PUSH)
+                      (PRE-CALL 1) (label 1)
+                      (LREF 0 0)
+                      (NUMADDI -1)
+                      (PUSH)
+                      (GREF) (mkid fact)
+                      (CALL 1)
+                      (label 1)
+                      (NUMMUL2)
+                      (RET)
+                      (label 3)
+                      (RET))
+              (DEFINE 0) (mkid fact)
+              (RET))
+  fact))
 
 (test* "(fact 5)" 120 (fact 5))
+
+(run-test "\
+    func tak(3) {
+      print $1, \" \", $2, \" \" , $3,\"\\n\"
+      if ($1 <= $2) {
+        return $3
+      } else {
+        return tak(tak($1-1, $2, $3), tak($2-1, $3, $1), tak($3-1, $1, $2))
+      }
+    }
+"
+'((%top-level (0 0)
+      (CLOSURE) (tak (3 0)
+                     (PRE-CALL 1) (label 1)
+                     (LREF 0 2)
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 1)
+                     (PRE-CALL 1) (label 2)
+                     (CONST) " "
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 2)
+                     (PRE-CALL 1) (label 3)
+                     (LREF 0 1)
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 3)
+                     (PRE-CALL 1) (label 4)
+                     (CONST) " "
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 4)
+                     (PRE-CALL 1) (label 5)
+                     (LREF 0 0)
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 5)
+                     (PRE-CALL 1) (label 6)
+                     (CONST) "\n"
+                     (PUSH)
+                     (GREF) (mkid display)
+                     (CALL 1)
+                     (label 6)
+                     (LREF 0 2)
+                     (PUSH)
+                     (LREF 0 1)
+                     (NUMLE2)
+                     (BF) (label 11)
+                     (LREF 0 0)
+                     (RET)
+                     (JUMP) (label 12)
+                     (label 11)
+                     (PRE-CALL 3) (label 10)
+                     (PRE-CALL 3) (label 7)
+                     (LREF 0 2)
+                     (NUMADDI -1)
+                     (PUSH)
+                     (LREF 0 1)
+                     (PUSH)
+                     (LREF 0 0)
+                     (PUSH)
+                     (GREF) (mkid tak)
+                     (CALL 3)
+                     (label 7)
+                     (PUSH)
+                     (PRE-CALL 3) (label 8)
+                     (LREF 0 1)
+                     (NUMADDI -1)
+                     (PUSH)
+                     (LREF 0 0)
+                     (PUSH)
+                     (LREF 0 2)
+                     (PUSH)
+                     (GREF) (mkid tak)
+                     (CALL 3)
+                     (label 8)
+                     (PUSH)
+                     (PRE-CALL 3) (label 9)
+                     (LREF 0 0)
+                     (NUMADDI -1)
+                     (PUSH)
+                     (LREF 0 2)
+                     (PUSH)
+                     (LREF 0 1)
+                     (PUSH)
+                     (GREF) (mkid tak)
+                     (CALL 3)
+                     (label 9)
+                     (PUSH)
+                     (GREF) (mkid tak)
+                     (CALL 3)
+                     (label 10)
+                     (RET)
+                     (label 12)
+                     (RET))
+              (DEFINE 0) (mkid tak)
+              (RET))
+  tak))
+
+(test* "(tak 7 5 3)" 4 (tak 7 5 3))
+
+(define (stak x y z)
+  (if (<= x y)
+    z
+    (stak (stak (- x 1) y z)
+          (stak (- y 1) z x)
+          (stak (- z 1) x y))))
+    
+(taco3-eval-string "
+    func ttak(3) {
+      if ($1 <= $2) {
+        return $3
+      } else {
+        return ttak(ttak($1-1, $2, $3), ttak($2-1, $3, $1), ttak($3-1, $1, $2))
+      }
+    }
+")
 
 (close-port taco.out)
 
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
+
+(newline)
+(use gauche.time)
+(time-these/report '(cpu 1.0) `((ttak . ,(lambda () (ttak 10 5 1)))
+                                (stak . ,(lambda () (stak 10 5 1)))))
+
 ;; EOF
