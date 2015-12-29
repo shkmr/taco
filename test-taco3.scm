@@ -20,7 +20,7 @@
                        (display "input: ")
                        (write in)
                        (newline)
-                       (let* ((val  (taco3-eval-string in))
+                       (let* ((val (taco3-eval-string in))
                               (ika (with-module taco3 *ika*)))
                          (list ika val))))))))
 
@@ -497,7 +497,7 @@
     (stak (stak (- x 1) y z)
           (stak (- y 1) z x)
           (stak (- z 1) x y))))
-    
+
 (taco3-eval-string "
     func ttak(3) {
       if ($1 <= $2) {
@@ -518,5 +518,4 @@
 (use gauche.time)
 (time-these/report '(cpu 1.0) `((ttak . ,(lambda () (ttak 10 5 1)))
                                 (stak . ,(lambda () (stak 10 5 1)))))
-
 ;; EOF
