@@ -1,8 +1,35 @@
 ;;;
-;;; TACO2 -- TACO1 + Simple optimization
+;;;  TACO3 is TACO2 retargeted to current Gauche VM (from 0.8.4 and on),
 ;;;
-;;; Simple optimiazation : constant expression
-;;;                        + NUMADDI, NUMSUBI
+;;;  TACO2 is TACO1 + Simple optimization.
+;;;
+;;;  TACO1 is something similar to hoc6 describied in
+;;;  ``The UNIX Programming Environment'' by Kernighan and Pike,
+;;;  implemented in Gauche and the target VM is MGVM.
+;;;
+;;;  MGVM (Mock-GVM) is a subset of the first generation Gauche VM
+;;;  (corresponding to Gauche version upto 0.8.3), implemented in Gauche
+;;;  (for me to study stack frame of Gauche VM at the time).
+;;;
+;;;  Useful documents:
+;;;
+;;;   http://practical-scheme.net/docs/stack-j.html
+;;;   http://practical-scheme.net/gauche/memo-j.html
+;;;   http://practical-scheme.net/gauche/memo-stack-j.html
+;;;   http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化
+;;;
+;;;  Transition from 1st gen to 2nd gen GVM:
+;;;
+;;;   http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化%3AFor%200.8.4
+;;;
+;;;  Restructuring stack frame (1st gen GVM):
+;;;
+;;;   http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化%3AFor%200.6.3
+;;;
+;;;  The source of hoc can be found in
+;;;
+;;;   http://www.cs.princeton.edu/~bwk/btl.mirror/new/ .
+;;;
 ;;;
 (define-module taco3
   (use srfi-1)
@@ -31,102 +58,85 @@
        (right: ^))
    ;;
    ;; --- rules
-   (top
-    ()
-    (top NEWLINE)
-    (top defn NEWLINE)  : (taco-compile-and-run $2)
+   (top    ()
+           (top NEWLINE)
+           (top defn NEWLINE)    : (taco-compile-and-run $2)
+           (top stmt NEWLINE)    : (taco-compile-and-run $2)
+           ;;(top asgn NEWLINE)
+           ;;(top expr NEWLINE)
+           (error    NEWLINE)
+           )
 
-    (top stmt NEWLINE)  : (taco-compile-and-run $2)
+   (asgn   (IDENTIFIER = expr)   : (list 'VARSET $1 $3)
+           (ARG = expr)          : (list 'ARGSET $1 $3)
+           )
 
-    ;;(top asgn NEWLINE)
-    ;;(top expr NEWLINE)
+   (stmt   (expr)                   : $1
+           (RETURN)                 : (list 'RETURN)
+           (RETURN expr)            : (list 'RETURN $2)
+           ;;(PROCEDURE LPAREN arglist RPAREN) : (list 'FUNCALL $1 $3)
+           (PRINT prlist)           : (list 'PRINT $2)
+           (while cond stmt)        : (list 'WHILE $2 $3)
+           (if cond stmt ELSE stmt) : (list 'IFEL $2 $3 $5)
+           (if cond stmt)           : (list 'IF $2 $3)
+           (LCBRA stmtlist RCBRA)   : (cons 'BEGIN $2)
+           )
 
-    (error    NEWLINE)
-    )
-
-  (asgn
-    (IDENTIFIER = expr) : (list 'VARSET $1 $3)
-    (ARG = expr)        : (list 'ARGSET $1 $3)
-    )
-
-   (stmt
-    (expr)                   : $1
-    (RETURN)                 : (list 'RETURN)
-    (RETURN expr)            : (list 'RETURN $2)
-    ;;(PROCEDURE LPAREN arglist RPAREN) : (list 'FUNCALL $1 $3)
-    (PRINT prlist)           : (list 'PRINT $2)
-    (while cond stmt)        : (list 'WHILE $2 $3)
-    (if cond stmt ELSE stmt) : (list 'IFEL $2 $3 $5)
-    (if cond stmt)           : (list 'IF $2 $3)
-    (LCBRA stmtlist RCBRA)   : (cons 'BEGIN $2)
-    )
-
-   (cond
-    (LPAREN expr RPAREN) : $2
-    )
+   (cond   (LPAREN expr RPAREN) : $2 )
 
    (while  (WHILE)  )
-
    (if     (IF)     )
 
-   (stmtlist
-    ()                   : '()
-    (stmtlist NEWLINE) : $1
-    (stmtlist stmt)      : (append $1 (list $2))
-    )
+   (stmtlist ()                    : '()
+             (stmtlist NEWLINE)    : $1
+             (stmtlist stmt)       : (append $1 (list $2))
+             )
 
-   (expr
-    (CONSTANT)              : (list 'CONSTANT (cadr $1))
-    (IDENTIFIER)            : (list 'VARREF $1)
-    (ARG)                   : (list 'ARGREF $1)
-    (asgn)                  : $1
-    (IDENTIFIER LPAREN arglist RPAREN) : (list 'FUNCALL $1 $3)
-    (READ LPAREN IDENTIFIER RPAREN)    : (list 'READ $3)
-    (LPAREN expr RPAREN)    : $2
-    (expr + expr)           : (list 'ADD $1 $3)
-    (expr - expr)           : (list 'SUB $1 $3)
-    (expr * expr)           : (list 'MUL $1 $3)
-    (expr / expr)           : (list 'DIV $1 $3)
-    (expr ^ expr)           : (list 'POW $1 $3)
-    (- expr (prec: uminus)) : (list 'NEGATE $2)
-    (expr > expr)           : (list 'NUMCMP '((NUMGT2)) $1 $3)
-    (expr >= expr)          : (list 'NUMCMP '((NUMGE2)) $1 $3)
-    (expr <  expr)          : (list 'NUMCMP '((NUMLT2)) $1 $3)
-    (expr <= expr)          : (list 'NUMCMP '((NUMLE2)) $1 $3)
-    (expr == expr)          : (list 'NUMCMP '((NUMEQ2)) $1 $3)
-    (expr != expr)          : (list 'NUMCMP '((NUMEQ2) (NOT)) $1 $3)
-    (expr && expr)          : (list 'AND $1 $3)
-    (expr OROR expr)        : (list 'OR  $1 $3)
-    (! expr)                : (list 'NOT $2)
-    )
+   (expr   (CONSTANT)              : (list 'CONSTANT (cadr $1))
+           (IDENTIFIER)            : (list 'VARREF $1)
+           (ARG)                   : (list 'ARGREF $1)
+           (asgn)                  : $1
+           (IDENTIFIER LPAREN arglist RPAREN) : (list 'FUNCALL $1 $3)
+           (READ LPAREN IDENTIFIER RPAREN)    : (list 'READ $3)
+           (LPAREN expr RPAREN)    : $2
+           (expr + expr)           : (list 'ADD $1 $3)
+           (expr - expr)           : (list 'SUB $1 $3)
+           (expr * expr)           : (list 'MUL $1 $3)
+           (expr / expr)           : (list 'DIV $1 $3)
+           (expr ^ expr)           : (list 'POW $1 $3)
+           (- expr (prec: uminus)) : (list 'NEGATE $2)
+           (expr > expr)           : (list 'NUMCMP '((NUMGT2)) $1 $3)
+           (expr >= expr)          : (list 'NUMCMP '((NUMGE2)) $1 $3)
+           (expr <  expr)          : (list 'NUMCMP '((NUMLT2)) $1 $3)
+           (expr <= expr)          : (list 'NUMCMP '((NUMLE2)) $1 $3)
+           (expr == expr)          : (list 'NUMCMP '((NUMEQ2)) $1 $3)
+           (expr != expr)          : (list 'NUMCMP '((NUMEQ2) (NOT)) $1 $3)
+           (expr && expr)          : (list 'AND $1 $3)
+           (expr OROR expr)        : (list 'OR  $1 $3)
+           (! expr)                : (list 'NOT $2)
+           )
 
-   (prlist
-    (expr)                : (list $1)
-    (STRING)              : (list (list 'CONSTANT $1))
-    (prlist COMMA expr)   : (append $1 (list $3))
-    (prlist COMMA STRING) : (append $1 (list (list 'CONSTANT $3)))
-    )
+   (prlist (expr)                  : (list $1)
+           (STRING)                : (list (list 'CONSTANT $1))
+           (prlist COMMA expr)     : (append $1 (list $3))
+           (prlist COMMA STRING)   : (append $1 (list (list 'CONSTANT $3)))
+           )
 
-   (defn
-     (FUNC procname LPAREN CONSTANT RPAREN stmt)
-     : (if (eq? (car $4) 'int)
-           (list 'DEF 'FUNC $2 (cadr $4) $6)
-           (errorp "in function definition"))
-     (PROC procname LPAREN CONSTANT RPAREN stmt)
-     : (if (eq? (car $4) 'int)
-           (list 'DEF 'PROC $2 (cadr $4) $6)
-           (errorp "in procedure definition"))
-     )
+   (defn   (FUNC procname LPAREN CONSTANT RPAREN stmt)  : (if (eq? (car $4) 'int)
+                                                            (list 'DEF 'FUNC $2 (cadr $4) $6)
+                                                            (errorp "in function definition"))
+           (PROC procname LPAREN CONSTANT RPAREN stmt)  : (if (eq? (car $4) 'int)
+                                                            (list 'DEF 'PROC $2 (cadr $4) $6)
+                                                            (errorp "in procedure definition"))
+           )
 
-   (procname
-    (IDENTIFIER) : $1
-    )
+   (procname (IDENTIFIER) : $1
+             )
 
-   (arglist
-    ()                    : '()
-    (expr)                : (list $1)
-    (arglist COMMA expr)  : (append $1 (list $3))
-    )
+   (arglist  ()                    : '()
+             (expr)                : (list $1)
+             (arglist COMMA expr)  : (append $1 (list $3))
+             )
    ))
 
 ;;;
