@@ -7,6 +7,8 @@
 
 (define *undef* (if #f #t))
 
+(with-module taco3 (set! *verbose* #t)) ; tell compiler be verbose.
+
 (define (run-test in expected)
   (test in expected (lambda ()
                  (with-output-to-port taco.out
@@ -491,6 +493,18 @@
 
 (test* "(tak 7 5 3)" 4 (tak 7 5 3))
 
+(with-module taco3 (set! *verbose* #f)) ; tell compiler be quiet.
+
+(close-port taco.out)
+
+;; If you don't want `gosh' to exit with nonzero status even if
+;; the test fails, pass #f to :exit-on-failure.
+(test-end :exit-on-failure #t)
+
+(newline)
+(print "******************** Benchmark test ********************")
+(use gauche.time)
+
 (define (stak x y z)
   (if (<= x y)
     z
@@ -508,14 +522,6 @@
     }
 ")
 
-(close-port taco.out)
-
-;; If you don't want `gosh' to exit with nonzero status even if
-;; the test fails, pass #f to :exit-on-failure.
-(test-end :exit-on-failure #t)
-
-(newline)
-(use gauche.time)
 (time-these/report '(cpu 1.0) `((ttak . ,(lambda () (ttak 10 5 1)))
                                 (stak . ,(lambda () (stak 10 5 1)))))
 ;; EOF
