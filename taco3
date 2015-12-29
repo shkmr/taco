@@ -1,0 +1,27 @@
+#!/usr/bin/env gosh
+;; -*-Scheme-*-
+(use gauche.parseopt)
+(use taco3)
+
+(define (main args)
+  (let-args (cdr args)
+      ((verbose "v|verbose" => set-verbose)
+       (help    "h|help"    => (cut usage (car args)))
+       . rest)
+    (if (null? rest)
+      (taco3)
+      (for-each taco3-load rest)
+    )))
+    
+(define (set-verbose)
+  (with-module taco3 (set! *verbose* #t)))
+
+(define (usage progname)
+  (print "\
+Usage: " progname "[options] [file.taco ...] 
+options:
+    -h       Print this message
+    -v       Verbose mode. Prints parsed tree, ika code, 
+             compiled code for each complie unit.
+"))
+;;EOF

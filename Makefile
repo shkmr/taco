@@ -9,7 +9,7 @@ mgvm.log :
 check : check-taco3 check-taco2 check-tlex check-ika check-taco0
 
 check-taco3 :
-	gosh -Ilalr -I. -Ivmhack test-taco3.scm > test-taco3.log
+	gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-taco3.scm > test-taco3.log
 
 check-taco2 :
 	@gosh -Ilalr -I. test-taco2.scm > test-taco2.log
