@@ -132,19 +132,23 @@
 ;;;
 ;;;  COMPILER
 ;;;
-(define *ika* #f)   ; last complied ika code. (used in test-taco3.scm)
+(define *ika* #f)      ; last complied ika code. (used in test-taco3.scm)
+(define *verbose* #f)  ; compiler flag
 
 (define (taco-compile-and-run tree)
+
+  (define (mess . x) (if *verbose* (apply print x)))
+
   (let ((result #f) (vmcode #f))
-    (print "tree: " tree)
+    (mess "tree: " tree)
     (reset-label)
     (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
-    (print "=== ika program ===")
-    (ika/pp *ika*)
+    (mess "=== ika program ===")
+    (if *verbose* (ika/pp *ika*))
     (set! vmcode (ika->vm-code *ika*))
-    (vm-dump-code vmcode)
+    (if *verbose* (vm-dump-code vmcode))
     (set! result (vm-code-execute! vmcode (interaction-environment)))
-    (print "=> " result)
+    (mess "=> " result)
     result))
 
 ;;
