@@ -170,9 +170,9 @@
 (define (reset-label) (set! *labelno* 0))
 
 ;;
-(define (tacomp tree level indefn)
+(define (tacomp tree level indef)
   ;;
-  ;; indefn : #f  -> toplevel
+  ;; indef : #f  -> toplevel
   ;;        : int -> # of args of the func being defn'ed
   ;;
   ;; level  : # of env levels (0 = toplevel)
@@ -193,8 +193,8 @@
       ((CONSTANT) (list '(CONST) (op-arg1 tree)))
 
       ((ADD)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef))
+             (d2 (tacomp (op-arg2 tree) level indef)))
          (cond ((and (const? d1)
                      (const? d2))
                 `((CONST) ,(+ (const-val d1) (const-val d2))))
@@ -213,8 +213,8 @@
                   (NUMADD2))))))
 
       ((SUB)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef))
+             (d2 (tacomp (op-arg2 tree) level indef)))
          (cond ((and (const? d1)
                      (const? d2))
                 (list '(CONST) (- (const-val d1) (const-val d2))))
@@ -233,8 +233,8 @@
                   (NUMSUB2))))))
 
       ((MUL)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef))
+             (d2 (tacomp (op-arg2 tree) level indef)))
          (if (and (const? d1) (const? d2))
            (list '(CONST) (* (const-val d1) (const-val d2)))
            `(,@d1
@@ -242,8 +242,8 @@
              ,@d2
              (NUMMUL2)))))
       ((DIV)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef))
+             (d2 (tacomp (op-arg2 tree) level indef)))
          (if (and (const? d1) (const? d2))
            (list '(CONST) (/ (const-val d1) (const-val d2)))
            `(,@d1
@@ -252,8 +252,8 @@
              (NUMDIV2)))))
 
       ((POW)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn))
-             (d2 (tacomp (op-arg2 tree) level indefn))
+       (let ((d1 (tacomp (op-arg1 tree) level indef))
+             (d2 (tacomp (op-arg2 tree) level indef))
              (L1 (new-label)))
          (if (and (const? d1) (const? d2))
            (list '(CONST) (expt (const-val d1) (const-val d2)))
@@ -267,7 +267,7 @@
              (label ,L1)))))
 
       ((NEGATE)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef)))
          (if (const? d1)
            (list '(CONST) (- (const-val d1)))
            `(,@d1
@@ -275,15 +275,15 @@
 
       ((NUMCMP)
        (let ((insn (op-arg1 tree))
-             (d1   (tacomp (op-arg2 tree) level indefn))
-             (d2   (tacomp (op-arg3 tree) level indefn)))
+             (d1   (tacomp (op-arg2 tree) level indef))
+             (d2   (tacomp (op-arg3 tree) level indef)))
          `(,@d1
            (PUSH)
            ,@d2
            ,@insn)))
 
       ((NOT)
-       (let ((d1 (tacomp (op-arg1 tree) level indefn)))
+       (let ((d1 (tacomp (op-arg1 tree) level indef)))
          `(,@d1
            (NOT))))
 
@@ -295,16 +295,16 @@
        (let ((s (op-arg1 tree))
              (v (op-arg2 tree)))
          (if (= level 0)
-           `(,@(tacomp v level indefn)
+           `(,@(tacomp v level indef)
              (DEFINE 0) (mkid ,s))
-           `(,@(tacomp v level indefn)
+           `(,@(tacomp v level indef)
              (GSET) (mkid ,s)))))
 
       ((ARGREF)
        (if (= level 0)
          (error "$n in top-level")
          (let ((s (op-arg1 tree)))
-           `((LREF ,(- level 1) ,(- indefn s))
+           `((LREF ,(- level 1) ,(- indef s))
              (UNBOX)
              ))))
 
@@ -313,13 +313,13 @@
            (error "$n in top-level")
            (let ((s (op-arg1 tree))
                  (v (op-arg2 tree)))
-             `(,@(tacomp v level indefn)
-               (LSET ,(- level 1) ,(- indefn s))
+             `(,@(tacomp v level indef)
+               (LSET ,(- level 1) ,(- indef s))
                ))))
       ((FUNCALL)
        (let* ((f    (op-arg1 tree))
               (args (map (lambda (x)
-                           (tacomp x level indefn))
+                           (tacomp x level indef))
                          (op-arg2 tree)))
               (n    (length args))
               (prep (append-map (lambda (x)
@@ -333,8 +333,8 @@
            (label ,L1))))
 
       ((IF)
-       (let ((c  (tacomp (op-arg1 tree) level indefn))
-             (s  (tacomp (op-arg2 tree) level indefn))
+       (let ((c  (tacomp (op-arg1 tree) level indef))
+             (s  (tacomp (op-arg2 tree) level indef))
              (L1 (new-label)))
          `(,@c
            (BF) (label ,L1)
@@ -342,9 +342,9 @@
            (label ,L1))))
 
       ((IFEL)
-       (let ((c  (tacomp (op-arg1 tree) level indefn))
-             (s  (tacomp (op-arg2 tree) level indefn))
-             (e  (tacomp (op-arg3 tree) level indefn))
+       (let ((c  (tacomp (op-arg1 tree) level indef))
+             (s  (tacomp (op-arg2 tree) level indef))
+             (e  (tacomp (op-arg3 tree) level indef))
              (L1 (new-label))
              (L2 (new-label)))
          `(,@c
@@ -356,8 +356,8 @@
            (label ,L2))))
 
       ((WHILE)
-       (let ((c  (tacomp (op-arg1 tree) level indefn))
-             (s  (tacomp (op-arg2 tree) level indefn))
+       (let ((c  (tacomp (op-arg1 tree) level indef))
+             (s  (tacomp (op-arg2 tree) level indef))
              (L1 (new-label))
              (L2 (new-label)))
          `((label ,L1)
@@ -368,14 +368,14 @@
            (label ,L2))))
 
       ((RETURN)
-       (if indefn
-         (let ((r (tacomp (op-arg1 tree) level indefn)))
+       (if indef
+         (let ((r (tacomp (op-arg1 tree) level indef)))
            `(,@r
              (RET)))
          (error "RETURN outside defn")))
 
       ((PRINT)
-       (let* ((args (map (lambda (x) (tacomp x level indefn))
+       (let* ((args (map (lambda (x) (tacomp x level indef))
                          (op-arg1 tree)))
               (lbls (map (lambda (x) (new-label)) args)))
          (append-map (lambda (item label)
@@ -388,14 +388,14 @@
                      args lbls)))
 
       ((BEGIN)
-       (append-map (lambda (x) (tacomp x level indefn))
+       (append-map (lambda (x) (tacomp x level indef))
                    (op-args tree)))
 
       ((DEF)
        (let ((f (op-arg2 tree))
              (n (op-arg3 tree))
              (b (op-arg4 tree)))
-         (if (not indefn)
+         (if (not indef)
            `((CLOSURE) (,f (,n 0)
                            ,@(map (lambda (i)
                                     (list 'BOX i))
