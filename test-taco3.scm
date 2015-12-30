@@ -500,29 +500,4 @@
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
-
-(newline)
-(display "******************** Benchmark test ********************\n")
-(display "Running benchmark test...\n" (current-error-port))
-(use gauche.time)
-
-(define (stak x y z)
-  (if (<= x y)
-    z
-    (stak (stak (- x 1) y z)
-          (stak (- y 1) z x)
-          (stak (- z 1) x y))))
-
-(taco3-eval-string "
-    func ttak(3) {
-      if ($1 <= $2) {
-        return $3
-      } else {
-        return ttak(ttak($1-1, $2, $3), ttak($2-1, $3, $1), ttak($3-1, $1, $2))
-      }
-    }
-")
-
-(time-these/report '(cpu 1.0) `((ttak . ,(lambda () (ttak 10 5 1)))
-                                (stak . ,(lambda () (stak 10 5 1)))))
 ;; EOF

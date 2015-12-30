@@ -6,6 +6,9 @@ insn.html : make-insn-table.scm
 mgvm.log :
 	gosh -I. test-mgvm.scm v > mgvm.log
 
+bench :
+	gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-bench.scm
+
 check : check-taco3 check-taco2 check-tlex check-ika check-taco0
 
 check-taco3 :

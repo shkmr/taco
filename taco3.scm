@@ -397,9 +397,9 @@
              (b (op-arg4 tree)))    ; body
          (if (not indef)
            (let* ((body    (tacomp b 1 n))
-                  (mlvars  (find-mutated-lvar body '())))
+                  (mlvars  (find-mutated-lvar body n '())))
              `((CLOSURE) (,f (,n 0)
-                           ,@(map (lambda (i) (list 'BOX i)) mlvars)
+                           ,@(map (lambda (i) (list 'BOX (+ i 1))) mlvars)
                            ,@(insert-unbox body mlvars)
                            (RET))
                (DEFINE 0) (mkid ,f)))
@@ -408,16 +408,20 @@
       (else
        (error "not implemented yet"))))))
 
-(define (find-mutated-lvar body mlvars)
+(define (find-mutated-lvar body n mlvars)
   (cond ((null? body) mlvars)
-        ((and (pair? (car body))
-              (eq? 'LSET (caar body)))
-         (if (not (= (cadar body) 0))
-           (error "something went wrong" `(LSET ,(cadar body) ,(caddar body))))
-         (find-mutated-lvar (cdr body)
-                            (cons (caddar body) mlvars)))
+        ((and (pair? (car body)) (eq? 'LSET (caar body)))
+         (let ((depth  (cadar  body))
+               (offset (caddar body)))
+           (if (or (not (= depth 0))
+                   (>= offset n))
+             (error "something went wrong" `(LSET ,depth ,offset)))
+           (find-mutated-lvar (cdr body) n (cons offset mlvars))))
         (else
-         (find-mutated-lvar (cdr body) mlvars))))
+         (find-mutated-lvar (cdr body) n mlvars))))
+
+;; assume all lvars get mutated.
+(define (find-mutated-lvar-0 body n mlvars) (iota n))
 
 (define (insert-unbox body mlvars)
   (append-map (lambda (e)
