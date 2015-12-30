@@ -493,6 +493,52 @@
 
 (test* "(tak 7 5 3)" 4 (tak 7 5 3))
 
+(run-test "\
+func lp(1) {
+  while ($1 > 0) {
+      print $1
+      $1 = $1-1
+  }
+  print \"\n\"
+}
+"
+ '((%top-level (0 0)
+        (CLOSURE) (lp (1 0)
+                      (BOX 1)
+                      (label 2)
+                      (LREF 0 0)
+                      (UNBOX)
+                      (PUSH)
+                      (CONST) 0
+                      (NUMGT2)
+                      (BF) (label 3)
+                      (PRE-CALL 1) (label 1)
+                      (LREF 0 0)
+                      (UNBOX)
+                      (PUSH)
+                      (GREF) (mkid display)
+                      (CALL 1)
+                      (label 1)
+                      (LREF 0 0)
+                      (UNBOX)
+                      (NUMADDI -1)
+                      (LSET 0 0)
+                      (JUMP) (label 2)
+                      (label 3)
+                      (PRE-CALL 1) (label 4)
+                      (CONST) "\n"
+                      (PUSH)
+                      (GREF) (mkid display)
+                      (CALL 1)
+                      (label 4)
+                      (RET)
+                      )
+        (DEFINE 0) (mkid lp)
+        (RET))
+  lp))
+
+(test* "(lp 10)" "10987654321\n" (with-output-to-string (lambda () (lp 10))))
+
 (with-module taco3 (set! *verbose* #f)) ; tell compiler be quiet.
 
 (close-port taco.out)
