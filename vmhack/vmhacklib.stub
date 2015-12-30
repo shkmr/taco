@@ -84,6 +84,15 @@ void Scm_Init_vmhack(void)
 
 (define-cproc vm-code-execute! (expr env) vm_code_execute)
 
+(define-cproc compiled-code-required-args   (cc::<compiled-code>) (return (SCM_MAKE_INT (-> cc requiredArgs))))
+(define-cproc compiled-code-optional-args   (cc::<compiled-code>) (return (SCM_MAKE_INT (-> cc optionalArgs))))
+(define-cproc compiled-code-name            (cc::<compiled-code>) (return (-> cc name)))
+(define-cproc compiled-code-code-size       (cc::<compiled-code>) (return (SCM_MAKE_INT (-> cc codeSize))))
+(define-cproc compiled-code-maxstack        (cc::<compiled-code>) (return (SCM_MAKE_INT (-> cc maxstack))))
+(define-cproc compiled-code-args            (cc::<compiled-code>)
+  (return (SCM_LIST2 (SCM_MAKE_INT (-> cc requiredArgs))
+                     (SCM_MAKE_INT (-> cc optionalArgs)))))
+
 "
 "
 ;; Local variables:
