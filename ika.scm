@@ -13,11 +13,6 @@
           integer-fits-insn-arg?
           unsigned-integer-fits-insn-arg?
           compile
-          compile-p1
-          compile-p2
-          compile-p3
-          compile-p4
-          compile-p5
           ))
 (select-module ika)
 
@@ -95,12 +90,17 @@
                 (let ((opcode  (car cp))
                       (operand (cadr cp)))
                   (cond ((is-a? operand <compiled-code>)
-                         (p1 level n opcode operand i)
-                         (ff (vm-code->list operand) (+ level 4) 0 #f))
+                         (let ((name (compiled-code-name operand))
+                               (args (compiled-code-args operand)))
+                           (pcode level n opcode name args operand)
+                           (ff (vm-code->list operand) (+ level 4) 0 #f)
+                           (format #t "~va     )~%" level "")))
                         ((and (pair? operand) (symbol? (car operand)))
-                         (pcode level n opcode (car operand) (cadr operand) i)
-                         (ff (cddr operand) (+ level 4) 0 #f)
-                         (format #t "~va     )~%" level ""))
+                         (let ((name (car operand))
+                               (args (cadr operand)))
+                           (pcode level n opcode name args i)
+                           (ff (cddr operand) (+ level 4) 0 #f)
+                           (format #t "~va     )~%" level "")))
                         (else
                          (error "ika: operand has to be <compiled-code> or ika program, but got "
                                 operand)))
