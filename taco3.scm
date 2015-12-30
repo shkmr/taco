@@ -150,7 +150,8 @@
   (define (mess . x) (if *verbose* (apply print x)))
 
   (let ((result #f) (vmcode #f))
-    (mess "tree: " tree)
+    (mess "tree: ")
+    (if *verbose* (write tree))
     (reset-label)
     (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
     (mess "=== ika program ===")
@@ -305,7 +306,6 @@
          (error "$n in top-level")
          (let ((s (op-arg1 tree)))
            `((LREF ,(- level 1) ,(- indef s))
-             (UNBOX)
              ))))
 
       ((ARGSET)
@@ -392,22 +392,41 @@
                    (op-args tree)))
 
       ((DEF)
-       (let ((f (op-arg2 tree))
-             (n (op-arg3 tree))
-             (b (op-arg4 tree)))
+       (let ((f (op-arg2 tree))     ; name
+             (n (op-arg3 tree))     ; number of args
+             (b (op-arg4 tree)))    ; body
          (if (not indef)
-           `((CLOSURE) (,f (,n 0)
-                           ,@(map (lambda (i)
-                                    (list 'BOX i))
-                                  (iota n 1))
-                           ,@(tacomp b 1 n)
+           (let* ((body    (tacomp b 1 n))
+                  (mlvars  (find-mutated-lvar body '())))
+             `((CLOSURE) (,f (,n 0)
+                           ,@(map (lambda (i) (list 'BOX i)) mlvars)
+                           ,@(insert-unbox body mlvars)
                            (RET))
-             (DEFINE 0) (mkid ,f))
+               (DEFINE 0) (mkid ,f)))
            (error "func or proc has to be at the top level"))))
 
       (else
        (error "not implemented yet"))))))
 
+(define (find-mutated-lvar body mlvars)
+  (cond ((null? body) mlvars)
+        ((and (pair? (car body))
+              (eq? 'LSET (caar body)))
+         (if (not (= (cadar body) 0))
+           (error "something went wrong" `(LSET ,(cadar body) ,(caddar body))))
+         (find-mutated-lvar (cdr body)
+                            (cons (caddar body) mlvars)))
+        (else
+         (find-mutated-lvar (cdr body) mlvars))))
+
+(define (insert-unbox body mlvars)
+  (append-map (lambda (e)
+                (if (and (pair? e)
+                         (eq? (car e) 'LREF)
+                         (memq (caddr e) mlvars))
+                  (list e '(UNBOX))
+                  (list e)))
+              body))
 ;;;
 ;;;  API
 ;;;
