@@ -37,7 +37,7 @@
   (use tlex)
   (use ika)
   (use vmhack)
-  (export taco3-parser taco3 taco3-load taco3-eval-string))
+  (export taco3-parser taco3 read-taco3 load-taco3 taco3-eval-string))
 (select-module taco3)
 
 (define taco3-parser
@@ -58,10 +58,10 @@
        (right: ^))
    ;;
    ;; --- rules
-   (top    ()
-           (top NEWLINE)
-           (top defn NEWLINE)    : (taco-compile-and-run $2)
-           (top stmt NEWLINE)    : (taco-compile-and-run $2)
+   (top    ()                    : ()
+           (top NEWLINE)         : ()
+           (top defn NEWLINE)    : (return $2)
+           (top stmt NEWLINE)    : (return $2)
            ;;(top asgn NEWLINE)
            ;;(top expr NEWLINE)
            (error    NEWLINE)
@@ -142,27 +142,6 @@
 ;;;
 ;;;  COMPILER
 ;;;
-(define *ika* #f)      ; last complied ika code. (used in test-taco3.scm)
-(define *verbose* #f)  ; compiler flag
-
-(define (taco-compile-and-run tree)
-
-  (define (mess . x) (if *verbose* (apply print x)))
-
-  (let ((result #f) (vmcode #f))
-    (mess "tree: ")
-    (if *verbose* (write tree))
-    (reset-label)
-    (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
-    (mess "=== ika program ===")
-    (if *verbose* (ika/pp *ika*))
-    (set! vmcode (ika->vm-code *ika*))
-    (if *verbose* (vm-dump-code vmcode))
-    (set! result (vm-code-execute! vmcode (interaction-environment)))
-    (mess "=> " result)
-    result))
-
-;;
 (define (const? e)    (eq? 'CONST (caar e)))
 (define (const-val e) (cadr e))
 
@@ -434,8 +413,47 @@
 ;;;
 ;;;  API
 ;;;
-(define (taco3)                 (taco3-parser tlex error))
-(define (taco3-load file)       (with-input-from-file file taco3))
+(define return #f)
+(define *ika* #f)      ; last complied ika code. (used in test-taco3.scm)
+(define *verbose* #f)  ; compiler flag
+(define *interactive* #f) ; repl mode if #t
+(define (read-taco3)
+  (call/cc (lambda (k)
+             (set! return k)
+             (taco3-parser tlex error))))
+
+(define (taco3)
+
+  (define (get-tree)
+    (if *interactive* (begin (display "taco3> ") (flush)))
+    (read-taco3))
+
+  (let loop ((tree   (get-tree))
+             (retval #f))
+    #;(begin (display "debug: ") (write tree) (newline))
+    (if (not (pair? tree))
+      retval
+      (let ((result #f)
+            (vmcode #f))
+        (if *verbose*         (begin (display "tree: ")
+                                     (write tree)
+                                     (newline)))
+        (reset-label)
+        (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
+        (if *verbose*         (begin (print "=== ika program ===")
+                                     (ika/pp *ika*)))
+
+        (set! vmcode (ika->vm-code *ika*))
+        (if *verbose*         (begin (vm-dump-code vmcode)))
+
+        (set! result (vm-code-execute! vmcode (interaction-environment)))
+        (if *verbose*         (begin (print "=> " result)))
+        (if *interactive*     (begin (print result)))
+
+        (loop (get-tree) result)
+        ))))
+
+(define (load-taco3 file)       (with-input-from-file file taco3))
 (define (taco3-eval-string str) (with-input-from-string str taco3))
 
 (provide "taco3")

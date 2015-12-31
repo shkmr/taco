@@ -3,25 +3,39 @@
 (use gauche.parseopt)
 (use taco3)
 
+(define (usage progname)
+  (print "\
+Usage: " progname "[options] [file.taco ...]
+options:
+    -h       Print this message
+    -v       Verbose mode. Prints parsed tree, ika code,
+             compiled code for each complie unit.
+    -i       Force interactive mode.
+    -q       Force quiet mode .
+"))
+
 (define (main args)
   (let-args (cdr args)
-      ((verbose "v|verbose" => set-verbose)
-       (help    "h|help"    => (cut usage (car args)))
+      ((verbose      "v|verbose"     => set-verbose)
+       (interactive  "i|interactive" => set-interactive)
+       (quiet        "q|quiet"       => set-quiet)
+       (help         "h|help"        => (cut usage (car args)))
        . rest)
-    (if (null? rest)
-      (taco3)
-      (for-each taco3-load rest)
-    )))
-    
+    (cond ((null? rest)
+           (set-interactive)
+           (taco3))
+          (else
+           (for-each load-taco3 rest)
+           ))))
+
 (define (set-verbose)
   (with-module taco3 (set! *verbose* #t)))
 
-(define (usage progname)
-  (print "\
-Usage: " progname "[options] [file.taco ...] 
-options:
-    -h       Print this message
-    -v       Verbose mode. Prints parsed tree, ika code, 
-             compiled code for each complie unit.
-"))
+(define (set-interactive)
+  (with-module taco3 (set! *interactive* #t)))
+
+(define (set-quiet)
+  (with-module taco3 (set! *verbose* #f))
+  (with-module taco3 (set! *interactive* #f)))
+
 ;;EOF
