@@ -5,7 +5,7 @@
 
 (define (usage progname)
   (print "\
-Usage: " progname "[options] [file.taco ...]
+Usage: " progname " [options] [file ...]
 options:
     -h       Print this message
     -v       Verbose mode. Prints parsed tree, ika code,

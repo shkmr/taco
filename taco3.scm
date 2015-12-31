@@ -42,7 +42,7 @@
 
 (define taco3-parser
   (lalr-parser
-   ;; (expect: 0)
+   (expect: 2)
    ;; --- token definitions
    (ID IDENTIFIER CONSTANT STRING
        VAR BLTIN UNDEF WHILE IF ELSE RETURN FUNC PROC ARG PRINT READ
