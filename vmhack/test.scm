@@ -34,8 +34,6 @@
 (test* "(fact 5)"              120   (fact 5))
 (test* "(fact 6)"              720   (cpr '(fact 6)))
 
-;; ToDo: add tests for compiled-code-*
-
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
