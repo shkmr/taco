@@ -1,5 +1,10 @@
 #!/usr/bin/env gosh
 ;; -*-Scheme-*-
+;;
+;; Command line:
+;;
+;;  $ gosh -Ilalr -Ivmhack -I. -ltaco3.scm taco3 file.taco
+;;
 (use gauche.parseopt)
 (use taco3)
 
