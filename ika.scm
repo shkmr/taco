@@ -212,7 +212,7 @@
                       (lp (cdr ika) #f  maxstack))
 
                      ((code)
-                      (let ((opcode (~ info' code))
+                      (let ((opcode (~ info'code))
                             (code   (cadr ika)))
                         (cond ((pair? code)
                                (compiled-code-emit2oi! ccb opcode arg0 arg1 (ika->vm-code code) i))
@@ -223,7 +223,7 @@
                         (lp (cddr ika) #f maxstack)))
 
                      ((codes)
-                      (let ((opcode (~ info' code))
+                      (let ((opcode (~ info'code))
                             (codes  (cadr ika)))
                         (if (not (pair? codes))
                           (error "ika: list of codes required but got " codes))
@@ -237,7 +237,7 @@
                         (lp (cddr ika) #f maxstack)))
 
                      ((obj)
-                      (let ((opcode (~ info' code))
+                      (let ((opcode (~ info'code))
                             (obj    (cadr ika)))
                         (if (and (pair? obj) (eq? 'mkid (car obj)))
                           (let ((id (make-identifier (cadr obj) (find-module 'user) '())))
