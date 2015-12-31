@@ -34,6 +34,20 @@
              compile-p4
              compile-p5)
 
+;; accessor for <compiled-code>, See Gauche/src/libcode.scm.
+(define (compiled-code-parent cc)        (slot-ref cc'paretnt))
+(define (compiled-code-arg-info cc)      (slot-ref cc'arg-info))
+(define (compiled-code-info cc)          (slot-ref cc'info))
+(define (compiled-code-required-args cc) (slot-ref cc'required-args))
+(define (compiled-code-optional-args cc) (slot-ref cc'optional-args))
+(define (compiled-code-name cc)          (slot-ref cc'name))
+(define (compiled-code-full-name cc)     (slot-ref cc'full-name))
+(define (compiled-code-size cc)          (slot-ref cc'size))
+(define (compiled-code-max-stack cc)     (slot-ref cc'max-stack))
+(define (compiled-code-intermediate-form (slot-ref cc'intermediate-form)))
+(define (compiled-code-args cc)    (list (slot-ref cc'required-args)
+                                         (slot-ref cc'optional-args)))
+
 ;;;
 ;;; pretty print ika program.
 ;;;
@@ -90,10 +104,9 @@
                 (let ((opcode  (car cp))
                       (operand (cadr cp)))
                   (cond ((is-a? operand <compiled-code>)
-                         (let ((name (slot-ref operand'name))
-                               (args (list (slot-ref operand'required-args)
-                                           (slot-ref operand'optional-args)))
-                               (info (slot-ref operand'info)))
+                         (let ((name (compiled-code-name operand))
+                               (args (compiled-code-args operand))
+                               (info (compiled-code-info operand)))
                            (pcode level n opcode name args operand)
                            (ff (vm-code->list operand) (+ level 4) 0 #f)
                            #;(begin(display "; ")(write info)(newline))
