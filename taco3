@@ -23,11 +23,11 @@ options:
   (let-args (cdr args)
       ((verbose      "v|verbose"     => set-verbose)
        (interactive  "i|interactive" => set-interactive)
-       (quiet        "q|quiet"       => set-quiet)
+       (quiet        "q|quiet")
        (help         "h|help"        => (cut usage (car args)))
        . rest)
     (cond ((null? rest)
-           (set-interactive)
+           (if quiet (set-quiet) (set-interactive))
            (taco3))
           (else
            (for-each load-taco3 rest)
@@ -40,7 +40,6 @@ options:
   (with-module taco3 (set! *interactive* #t)))
 
 (define (set-quiet)
-  (with-module taco3 (set! *verbose* #f))
   (with-module taco3 (set! *interactive* #f)))
 
 ;;EOF
