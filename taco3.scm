@@ -437,7 +437,9 @@
         (let ((tree   (get-tree)))
         #;(begin (display "debug: ") (write tree) (newline))
           (if (not (pair? tree))
-            retval
+            (begin
+              (if *interactive* (newline))
+              retval)
             (let ((result #f)
                   (vmcode #f))
               (if *verbose*         (begin (display "tree: ")

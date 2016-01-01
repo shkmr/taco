@@ -97,80 +97,82 @@
 ;;;  4) alternate token spelling (CARM 2.4) for #, ##.
 ;;;
 (define (tlex)
-  (skip-spaces)
-  (let loop ((c (read-char)))
-    (cond
-     ((eof-object? c)  '*eoi*)
-     ((char=? c #\newline)
-      (inc! lineno)
-      'NEWLINE)
-     ((char=? c #\#)                    ; XXX Check beginning of line?
-      (do-sharp-command)
-      (loop (read-char)))
+  (guard (e ((eof-object? e) '*eoi*)
+            (else (raise e)))
+    (skip-spaces)
+    (let loop ((c (read-char)))
+      (cond
+       ((eof-object? c)  '*eoi*)
+       ((char=? c #\newline)
+        (inc! lineno)
+        'NEWLINE)
+       ((char=? c #\#)                  ; XXX Check beginning of line?
+        (do-sharp-command)
+        (loop (read-char)))
 
-     ((char=? c #\$)
-      (cons 'ARG (- (char->integer (read-char))
-                    (char->integer #\0))))
+       ((char=? c #\$)
+        (cons 'ARG (- (char->integer (read-char))
+                      (char->integer #\0))))
 
-     ((char=? c #\0)
-      (cond ((char-ci=? (peek-char) #\x)
-             (read-char)
-             (cons 'CONSTANT (read-hexadecimal '())))
-            (else
-             (cons 'CONSTANT (read-octal-or-flonum (list c))))))
+       ((char=? c #\0)
+        (cond ((char-ci=? (peek-char) #\x)
+               (read-char)
+               (cons 'CONSTANT (read-hexadecimal '())))
+              (else
+               (cons 'CONSTANT (read-octal-or-flonum (list c))))))
 
-     ((char-numeric? c)
-      (cons 'CONSTANT (read-decimal (list c))))
+       ((char-numeric? c)
+        (cons 'CONSTANT (read-decimal (list c))))
 
-     ((and (char=? c #\.) (char-numeric? (peek-char)))
-      (cons 'CONSTANT (read-flonum (list c) #[0-9] 10 #[Ee])))
+       ((and (char=? c #\.) (char-numeric? (peek-char)))
+        (cons 'CONSTANT (read-flonum (list c) #[0-9] 10 #[Ee])))
 
-     ((char=? c #\.)
-      (if (char=? (peek-char) #\.)
+       ((char=? c #\.)
+        (if (char=? (peek-char) #\.)
           (begin
             (read-char)
             (if (char=? (peek-char) #\.)
-                (begin
-                  (read-char)
-                  'ELLIPSIS)
-                (error "syntax error ..")))
+              (begin
+                (read-char)
+                'ELLIPSIS)
+              (error "syntax error ..")))
           'DOT))
 
-     ((and (char=? c #\L) (char=? (peek-char) #\"))
-      (read-char)                       ; L
-      (cons 'STRING   (read-string-literal)))
-     ((and (char=? c #\L) (char=? (peek-char) #\'))
-      (read-char)                       ; L
-      (cons 'CONSTANT (list 'wchar (read-character-constant))))
-     ((char=? c #\")
-      (cons 'STRING   (read-string-literal)))
-     ((char=? c #\')
-      (cons 'CONSTANT (list 'int (read-character-constant))))
+       ((and (char=? c #\L) (char=? (peek-char) #\"))
+        (read-char)                     ; L
+        (cons 'STRING   (read-string-literal)))
+       ((and (char=? c #\L) (char=? (peek-char) #\'))
+        (read-char)                     ; L
+        (cons 'CONSTANT (list 'wchar (read-character-constant))))
+       ((char=? c #\")
+        (cons 'STRING   (read-string-literal)))
+       ((char=? c #\')
+        (cons 'CONSTANT (list 'int (read-character-constant))))
 
-     ((char-set-contains? initial-identifier-charset c)
-      (read-identifier (list c)))
+       ((char-set-contains? initial-identifier-charset c)
+        (read-identifier (list c)))
 
-     ((char-set-contains? operator-charset c)
-      (read-operator c))
+       ((char-set-contains? operator-charset c)
+        (read-operator c))
 
-     ((char=? c #\,)   'COMMA)
-     ((char=? c #\:)   'COLON)
-     ((char=? c #\;)   'SEMICOLON)
-     ((char=? c #\()   'LPAREN)
-     ((char=? c #\))   'RPAREN)
-     ((char=? c #\{)   'LCBRA)
-     ((char=? c #\})   'RCBRA)
-     ((char=? c #\[)   'LSBRA)
-     ((char=? c #\])   'RSBRA)
+       ((char=? c #\,)   'COMMA)
+       ((char=? c #\:)   'COLON)
+       ((char=? c #\;)   'SEMICOLON)
+       ((char=? c #\()   'LPAREN)
+       ((char=? c #\))   'RPAREN)
+       ((char=? c #\{)   'LCBRA)
+       ((char=? c #\})   'RCBRA)
+       ((char=? c #\[)   'LSBRA)
+       ((char=? c #\])   'RSBRA)
 
-     ;; special case for c-operator due to Scheme
-     ((char=? c #\|)   (or (follow #\| 'OROR          #f)
-                           (follow #\= '(ASSIGN . OR) #f)
-                           'OR))
-     (else
-      (error "waring: illegal character: " c)
-      (skip-spaces)
-      (loop (read-char))))))
+       ;; special case for c-operator due to Scheme
+       ((char=? c #\|)   (or (follow #\| 'OROR          #f)
+                             (follow #\= '(ASSIGN . OR) #f)
+                             'OR))
+       (else
+        (error "waring: illegal character: " c)
+        (skip-spaces)
+        (loop (read-char)))))))
 
 ;; end of tlex.
 
@@ -205,22 +207,22 @@
 
 (define (skip-spaces)
   (let loop ((c (peek-char)))
-    (if (and (not (eof-object? c))
-	     (or (char=? c #\space)
-		 (char=? c #\tab)
-		 (char=? c #\x0b)     ; VT
-		 (char=? c #\page)))
-        (begin
-          (read-char)
-          (loop (peek-char))))))
+    (cond ((eof-object? c) (raise c))
+          ((or (char=? c #\space)
+               (char=? c #\tab)
+               (char=? c #\x0b)     ; VT
+               (char=? c #\page))
+           (read-char)
+           (loop (peek-char)))
+          (else c))))
 
 (define (skip-line)
   (let loop ((c (peek-char)))
-    (if (and (not (eof-object? c))
-             (not (char=? c #\newline)))
-        (begin
-          (read-char)
-          (loop (peek-char))))))
+    (cond ((eof-object? c) (raise c))
+          ((not (char=? c #\newline))
+           (read-char)
+           (loop (peek-char)))
+          (else c))))
 
 (define (l->symbol l)
   (string->symbol (apply string (reverse l))))
@@ -357,7 +359,7 @@
   (let lp ((c (read-char))
            (s '()))
     (if (eof-object? c)
-        (error "missing double quote")
+        (error "Unexpected EOF.")
         (if (char=? c #\")
             (apply string (reverse s))
             (let ((cc (backslash c)))
@@ -367,7 +369,7 @@
   (let lp ((c (read-char))
            (s 0))
     (if (eof-object? c)
-        (error "missing quote")
+        (error "Unpexpected EOF.")
         (if (char=? c  #\')
             (number->string s)
             (let ((cc (backslash c)))
