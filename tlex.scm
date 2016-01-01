@@ -358,27 +358,26 @@
 (define (read-string-literal)
   (let lp ((c (read-char))
            (s '()))
-    (if (eof-object? c)
-        (error "Unexpected EOF.")
-        (if (char=? c #\")
-            (apply string (reverse s))
-            (let ((cc (backslash c)))
-              (lp (read-char) (cons cc s)))))))
+    (cond ((eof-object? c) (error "Unexpected EOF."))
+          ((char=? c #\")  (apply string (reverse s)))
+          (else
+           (let ((cc (backslash c)))
+             (lp (read-char) (cons cc s)))))))
 
 (define (read-character-constant)
   (let lp ((c (read-char))
            (s 0))
-    (if (eof-object? c)
-        (error "Unpexpected EOF.")
-        (if (char=? c  #\')
-            (number->string s)
-            (let ((cc (backslash c)))
-              ;; Meaning of Multicharacter constant is implementation
-              ;; dependent.  Here we implement a convention with left-to-right
-              ;; packing, which is  described in CARM pp. 31--32.
-              (lp (read-char)
-                  (+ (* 256 s)
-                     (char->integer cc))))))))
+    (cond ((eof-object? c) (error "Unpexpected EOF."))
+          ((char=? c  #\') (number->string s))
+          (else
+           (let ((cc (backslash c)))
+             ;; Meaning of Multicharacter constant is implementation
+             ;; dependent.  Here we implement a convention with left-to-right
+             ;; packing, which is described in CARM pp. 31--32.
+             (lp (read-char)
+                 (+ (* 256 s)
+                    (char->integer cc))))))))
+
 ;;;
 ;;; read-hexadecimal, octal.
 ;;;
@@ -558,10 +557,9 @@
 ;;;
 (define (follow expect ifyes ifno)
   (let ((c (peek-char)))
-    (if (char=? c expect)
-        (begin (read-char)
-               ifyes)
-        ifno)))
+    (cond ((eof-object? c)   (error "Unexpected EOF."))
+          ((char=? c expect) (read-char) ifyes)
+          (else              ifno))))
 
 ;;;
 ;;;
@@ -583,7 +581,8 @@
 	(sc-do-sharp-space))
       (let lp ((c (peek-char))
 	       (l '()))
-	(cond ((char-alphabetic? c)
+	(cond ((eof-object? c) (error "Unexpected EOF."))
+              ((char-alphabetic? c)
 	       (read-char)
 	       (lp (peek-char) (cons c l)))
 	      (else
