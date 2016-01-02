@@ -168,9 +168,12 @@
 (define (ika->vm-code ika)
   (let ((name     (car ika))
         (reqargs  (caadr ika))
-        (optargs  (cadadr ika)))
+        (optargs  (cadadr ika))
+        (arginfo  (get-keyword :arg-info (cadr ika) #f))
+        (parent   (get-keyword :parent   (cadr ika) #f))
+        (intForm  (get-keyword :int-form (cadr ika) #f)))
 
-    (let ((ccb (make-compiled-code-builder reqargs optargs name #f #f #f))
+    (let ((ccb (make-compiled-code-builder reqargs optargs name arginfo parent intForm))
           (labels '()))
 
       (define (get-label-id label)
