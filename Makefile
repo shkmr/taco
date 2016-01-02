@@ -29,3 +29,15 @@ check-ika :
 clean :
 	rm -f *.log *~ insn.html taco0.out taco2.out
 
+
+install : all
+	@echo "There is nothing worth to install..."
+
+INSTALL      = "/usr/local/bin/gauche-install" -C
+TACOIKAFILES = taco3.scm tlex.scm ika.scm
+LALRFILES    = lalr/lalr-gauche.scm lalr/lalr.scm
+install-anyway :
+	(cd vmhack; make install-anyway)
+	$(INSTALL) -m 444 -T `gauche-config --sitelibdir` $(TACOIKAFILES)
+	$(INSTALL) -m 444 -T `gauche-config --sitelibdir` -p lalr $(LALRFILES)
+	$(INSTALL) -m 755 -T `gauche-config --prefix`/bin taco3
