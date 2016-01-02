@@ -12,7 +12,7 @@ mgvm.log :
 bench :
 	gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-bench.scm
 
-check : check-taco3 check-taco2 check-tlex check-ika check-taco0
+check : check-taco3 check-taco2 check-tlex check-ika
 
 check-taco3 :
 	@gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-taco3.scm > test-taco3.log
@@ -25,9 +25,6 @@ check-tlex :
 
 check-ika :
 	@gosh -I. -Ivmhack test-ika.scm > test-ika.log
-
-check-taco0 :
-	@gosh -I. -Ilalr -Ivmhack test-taco0.scm > test-taco0.log
 
 clean :
 	rm -f *.log *~ insn.html taco0.out taco2.out
