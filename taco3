@@ -31,7 +31,9 @@ options:
            (taco3))
           (else
            (for-each load-taco3 rest)
-           ))))
+           ))
+    0))
+
 
 (define (set-verbose)
   (with-module taco3 (set! *verbose* #t)))
