@@ -5,13 +5,13 @@
 (test-module 'ika)
 
 (define test-code1
-  '(%top-level (0 0)
+  '(%toplevel (0 0)
         (CONST) 2
         (RET)
         ))
 
 (define test-code2
-  '(%top-level (0 0)
+  '(%toplevel (0 0)
         (CONST) 1
         (PUSH)
         (CONST) 2
@@ -26,7 +26,7 @@
         ))
 
 (define test-code3
-  '(%top-level (0 0)
+  '(%toplevel (0 0)
         (CLOSURE) (hello (0 0)
             (CONST-PUSH) "hello, world"
             (GREF-TAIL-CALL 1) (mkid print)
@@ -36,7 +36,7 @@
         ))
 
 (define test-code4
-  '(%top-level (0 0)
+  '(%toplevel (0 0)
         (CLOSURE) (FACT (1 0)
                       (LREF0)
                       (BNUMNEI 1) (label 1)
@@ -55,31 +55,31 @@
         ))
 
 (define test-code5
-  '(%top-level (0 0)
-               (CLOSURE) (fo (1 0)
-                             (LREF0)
-                             (BNEQC) fobar (label 1)
-                             (CONST-RET) yes
-                             (label 1)
-                             (CONST-RET) no)
-               (DEFINE 0) (mkid fo)
-               (RET)
-               ))
+  '(%toplevel (0 0)
+        (CLOSURE) (fo (1 0)
+                      (LREF0)
+                      (BNEQC) fobar (label 1)
+                      (CONST-RET) yes
+                      (label 1)
+                      (CONST-RET) no)
+        (DEFINE 0) (mkid fo)
+        (RET)
+        ))
 
 (define test-code6
-  '(%top-level (0 0)
-               (info "(lambda (x) (case x ((fobar) 'yes) (else 'no)))")
-               (CLOSURE) (fo (1 0)
-                             (info "x")
-                             (LREF0)
-                             (BNEQC) fobar (label 1)
-                             (CONST-RET) yes
-                             (label 1)
-                             (CONST-RET) no)
-               (info "(define (fo x) ...)")
-               (DEFINE 0) (mkid fo)
-               (RET)
-               ))
+  '(%toplevel (0 0)
+        (info "(lambda (x) (case x ((fobar) 'yes) (else 'no)))")
+        (CLOSURE) (fo (1 0)
+                      (info "x")
+                      (LREF0)
+                      (BNEQC) fobar (label 1)
+                      (CONST-RET) yes
+                      (label 1)
+                      (CONST-RET) no)
+        (info "(define (fo x) ...)")
+        (DEFINE 0) (mkid fo)
+        (RET)
+        ))
 
 ;;; ToDo: write test case for ``codes'' operand type.
 
@@ -88,7 +88,7 @@
   (ika/pp code)
   #;(print "====> ")
   (let ((cc (ika->vm-code code)))
-    #;(ika/pp (append '(%top-level (0 0))
+    #;(ika/pp (append '(%toplevel (0 0))
                     (vm-code->list cc)))
     (vm-dump-code cc)))
 

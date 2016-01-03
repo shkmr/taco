@@ -259,14 +259,14 @@
 
       ((ARGREF)
        (if (= level 0)
-         (error "$n in top-level")
+         (error "$n in toplevel")
          (let ((s (op-arg1 tree)))
            `((LREF ,(- level 1) ,(- indef s))
              ))))
 
       ((ARGSET)
        (if (= level 0)
-           (error "$n in top-level")
+           (error "$n in toplevel")
            (let ((s (op-arg1 tree))
                  (v (op-arg2 tree)))
              `(,@(tacomp v level indef)
@@ -423,7 +423,7 @@
                                            (write tree)
                                            (newline)))
               (reset-label)
-              (set! *ika* `(%top-level (0 0) ,@(tacomp tree 0 #f) (RET)))
+              (set! *ika* `(%toplevel (0 0) ,@(tacomp tree 0 #f) (RET)))
               (if *verbose*         (begin (print "=== ika program ===")
                                            (ika/pp *ika*)))
 

@@ -290,7 +290,7 @@
 (define (c sexp)
   (let ((cc (compile sexp (interaction-environment))))
     (newline)
-    (ika/pp (append '(%top-level (0 0)) (vm-code->list cc)))
+    (ika/pp (append '(%toplevel (0 0)) (vm-code->list cc)))
     (newline)
     (vm-dump-code cc)
     ))
