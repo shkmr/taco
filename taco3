@@ -21,27 +21,17 @@ options:
 
 (define (main args)
   (let-args (cdr args)
-      ((verbose      "v|verbose"     => set-verbose)
-       (interactive  "i|interactive" => set-interactive)
+      ((verbose      "v|verbose"     => (cut taco3-set-verbose #t))
+       (interactive  "i|interactive" => (cut taco3-show-prompt #t))
        (quiet        "q|quiet")
        (help         "h|help"        => (cut usage (car args)))
        . rest)
     (cond ((null? rest)
-           (if quiet (set-quiet) (set-interactive))
+           (taco3-show-prompt (not quiet))
            (taco3))
           (else
            (for-each load-taco3 rest)
            ))
     0))
-
-
-(define (set-verbose)
-  (with-module taco3 (set! *verbose* #t)))
-
-(define (set-interactive)
-  (with-module taco3 (set! *interactive* #t)))
-
-(define (set-quiet)
-  (with-module taco3 (set! *interactive* #f)))
 
 ;;EOF

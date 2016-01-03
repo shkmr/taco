@@ -7,7 +7,14 @@
   (use tlex)
   (use ika)
   (use vmhack)
-  (export taco3-parser taco3 read-taco3 load-taco3 taco3-eval-string))
+  (export taco3-parser
+          taco3
+          read-taco3
+          load-taco3
+          taco3-eval-string
+          taco3-set-verbose
+          taco3-show-prompt
+          ))
 (select-module taco3)
 
 (define taco3-parser
@@ -386,7 +393,7 @@
 (define return #f)
 (define *ika* #f)      ; last complied ika code. (used in test-taco3.scm)
 (define *verbose* #f)  ; compiler flag
-(define *interactive* #f) ; repl mode if #t
+(define *show-prompt* #f) ; repl mode if #t
 (define (read-taco3)
   (call/cc (lambda (k)
              (set! return k)
@@ -395,7 +402,7 @@
 (define (taco3)
 
   (define (get-tree)
-    (if *interactive* (begin (display "taco3> ") (flush)))
+    (if *show-prompt* (begin (display "taco3> ") (flush)))
     (read-taco3))
 
     (let loop ((retval #f))
@@ -408,7 +415,7 @@
         #;(begin (display "debug: ") (write tree) (newline))
           (if (not (pair? tree))
             (begin
-              (if *interactive* (newline))
+              (if *show-prompt* (newline))
               retval)
             (let ((result #f)
                   (vmcode #f))
@@ -425,13 +432,14 @@
 
               (set! result (vm-code-execute! vmcode (interaction-environment)))
               (if *verbose*         (begin (print "=> " result)))
-              (if *interactive*     (begin (print result)))
+              (if *show-prompt*     (begin (print result)))
 
               (loop result)))))))
 
-
 (define (load-taco3 file)       (with-input-from-file file taco3))
 (define (taco3-eval-string str) (with-input-from-string str taco3))
+(define (taco3-set-verbose x)   (set! *verbose* x))
+(define (taco3-show-prompt x)   (set! *show-prompt* x))
 
 (provide "taco3")
 ;;; EOF
