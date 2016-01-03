@@ -1,5 +1,11 @@
 all : insn.html vmhack/vmhack.so
 
+demoq :
+	gosh -Ilalr -Ivmhack -I. -ltaco3.scm taco3 test.taco
+
+demov :
+	gosh -Ilalr -Ivmhack -I. -ltaco3.scm taco3 -v test.taco
+
 vmhack/vmhack.so :
 	(cd vmhack; ./configure; make check)
 
