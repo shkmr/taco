@@ -22,22 +22,6 @@
   (corresponding to Gauche version upto 0.8.3), implemented in Gauche
   (to study stack frame of Gauche VM at the time).
 
-## Useful documents
-### Gauche VM
-
-  - http://practical-scheme.net/docs/stack-j.html
-  - http://practical-scheme.net/gauche/memo-j.html
-  - http://practical-scheme.net/gauche/memo-stack-j.html
-  - http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化
-
-### Transition from 1st gen to 2nd gen GVM:
-
-  - http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化%3AFor%200.8.4
-
-### Restructuring stack frame (for 1st gen GVM):
-
-  - http://practical-scheme.net/wiliki/wiliki.cgi?Gauche%3AVMの最適化%3AFor%200.6.3
-
 ###  The source of the original hoc can be found in
 
   -  http://www.cs.princeton.edu/~bwk/btl.mirror/new/
