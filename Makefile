@@ -39,6 +39,9 @@ clean :
 install : all
 	@echo "There is nothing worth to install..."
 
+ika-intro.txt :
+	gpsh ika-intro.scm > ika-intro.txt
+
 INSTALL      = "/usr/local/bin/gauche-install" -C
 TACOIKAFILES = taco3.scm tlex.scm ika.scm
 LALRFILES    = lalr/lalr-gauche.scm lalr/lalr.scm

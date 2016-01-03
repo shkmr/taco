@@ -12,6 +12,8 @@
           integer-fits-insn-arg?
           unsigned-integer-fits-insn-arg?
           compile
+          SCM_BINDING_INLINABLE
+          SCM_BINDING_CONST
           ))
 (select-module ika)
 
@@ -31,7 +33,10 @@
              compile-p2
              compile-p3
              compile-p4
-             compile-p5)
+             compile-p5
+             SCM_BINDING_INLINABLE
+             SCM_BINDING_CONST
+             )
 
 ;; accessor for <compiled-code>, See Gauche/src/libcode.scm.
 (define (compiled-code-parent cc)        (slot-ref cc'paretnt))
@@ -170,9 +175,9 @@
         (optargs  (cadadr ika))
         (arginfo  (get-keyword :arg-info (cadr ika) #f))
         (parent   (get-keyword :parent   (cadr ika) #f))
-        (intForm  (get-keyword :int-form (cadr ika) #f)))
+        (int-form (get-keyword :intermediate-form (cadr ika) #f)))
 
-    (let ((ccb (make-compiled-code-builder reqargs optargs name arginfo parent intForm))
+    (let ((ccb (make-compiled-code-builder reqargs optargs name arginfo parent int-form))
           (labels '()))
 
       (define (get-label-id label)
@@ -292,7 +297,7 @@
     (newline)
     (ika/pp (append '(%toplevel (0 0)) (vm-code->list cc)))
     (newline)
-    (vm-dump-code cc)
+    #;(vm-dump-code cc)
     ))
 
 #|
