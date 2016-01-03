@@ -124,15 +124,17 @@
 
 (ika/pp `(%toplevel (0 0)
              ,@(vm-code->list (compile 2 (interaction-environment)))))
+
 ;; ika/pp は ika プログラムを見やすくインデントして表示します。
 ;; 左端の数字はアドレスです。
 
 ;;;   ところで、後ほど 5. で説明しますが、ika プログラムには
 ;;;   アドレスは不要なので出力は ika プログラムにはなってません。
-;;;   これらをまとめた c という関数が ika モジュールの中にあるので
-;;;   いろいろ試してみましょう。
 
-;; c は export されてないので、勝手に取り込みます。
+;;;   これら complie と ika/pp の呼び出しをまとめた c という関数が ika
+;;;   モジュールの中にあるのでいろいろ試してみましょう。
+
+;; c は export されてないので取り込みます。
 
 (define c (with-module ika c))
 
@@ -220,7 +222,7 @@
                   (RET)))
 
 ;; となります。　ここで、(GREF) のオペランドは識別子(identifier)なので
-;; make-identifer で user モジュールの識別子を作ってやります。
+;; make-identifer で user モジュールの識別子を作っています。
 ;; これを ika->vm-code でアセンプルすると
 
 (vm-dump-code (ika->vm-code ika1))
@@ -256,7 +258,7 @@
 ;; 次に手続きの定義を見てみましょう。
 
 (c '(define (foo) (print "foo")))
-      
+
 ;; 手続き本体は <compiled-code> となって (CLOSURE) のオペランドに
 ;; なっています。その結果クロージャが val0 にロードされます。
 ;; そして (DEFINE 0) で foo の束縛します。
@@ -264,8 +266,8 @@
 
 (vm-dump-code (compile '(define (foo) (print "foo")) (interaction-environment)))
 
-;;;   DEFINE のパラメータは 0 が通常の define, SCM_BINDING_CONST が
-;;;   define-constant、 SCM_BINDING_INLINABLE が define-inline に
+;;;   DEFINE のパラメータは 0 が通常の define、SCM_BINDING_CONST が
+;;;   define-constant、SCM_BINDING_INLINABLE が define-inline に
 ;;;   相当するんだと思います。 (まだ、あまり試してません Gauche/src/vminsn.scm 参照)
 ;;;   ここで重要なのは機械語の DEFINE は Scheme のトップレベルの define
 ;;;   に相当するということ。 Scheme 手続き内の define はコンパイラによって
@@ -307,7 +309,7 @@
                                      (NUMADDI -1)
                                      (PUSH)
                                      (GREF) (mkid ikafact)
-                                     (CALL 1) 
+                                     (CALL 1)
                           (label 2)  (NUMMUL2)
                                      (RET))
                        (DEFINE 0) (mkid ikafact)

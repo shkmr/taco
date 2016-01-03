@@ -39,7 +39,7 @@ clean :
 install : all
 	@echo "There is nothing worth to install..."
 
-ika-intro.txt :
+ika-intro.txt : ika-intro.scm
 	gpsh ika-intro.scm > ika-intro.txt
 
 INSTALL      = "/usr/local/bin/gauche-install" -C
