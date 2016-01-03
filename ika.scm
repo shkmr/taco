@@ -4,7 +4,6 @@
 (define-module ika
   (use gauche.vm.insn)
   (use gauche.vm.code)
-  (use vmhack)
   (export ika/pp
           ika->vm-code
           vm-dump-code
