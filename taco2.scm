@@ -6,7 +6,7 @@
 ;;;
 (define-module taco2
   (use srfi-1)
-  (use lalr)
+  (use lang.lalr.lalr)
   (use tlex)
   (use mgvm)
   (export taco2-parser taco2 taco2-load taco2-eval-string))

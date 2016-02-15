@@ -1,10 +1,10 @@
 all : insn.html vmhack/vmhack.so
 
 demoq :
-	gosh -Ilalr -Ivmhack -I. -ltaco3.scm taco3 test.taco
+	gosh -Ivmhack -I. -ltaco3.scm taco3 test.taco
 
 demov :
-	gosh -Ilalr -Ivmhack -I. -ltaco3.scm taco3 -v test.taco
+	gosh -Ivmhack -I. -ltaco3.scm taco3 -v test.taco
 
 vmhack/vmhack.so :
 	(cd vmhack; ./configure; make check)
@@ -16,15 +16,15 @@ mgvm.log :
 	gosh -I. test-mgvm.scm v > mgvm.log
 
 bench :
-	gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-bench.scm
+	gosh  -I. -Ivmhack -ltaco3.scm test-bench.scm
 
 check : check-taco3 check-taco2 check-tlex check-ika
 
 check-taco3 :
-	@gosh -Ilalr -I. -Ivmhack -ltaco3.scm test-taco3.scm > test-taco3.log
+	@gosh -I. -Ivmhack -ltaco3.scm test-taco3.scm > test-taco3.log
 
 check-taco2 :
-	@gosh -Ilalr -I. test-taco2.scm > test-taco2.log
+	@gosh -I. test-taco2.scm > test-taco2.log
 
 check-tlex :
 	@gosh -I.  test-tlex.scm > test-tlex.log

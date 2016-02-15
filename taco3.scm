@@ -3,7 +3,8 @@
 ;;;
 (define-module taco3
   (use srfi-1)
-  (use lalr)
+  (use lang.core)
+  (use lang.lalr.lalr)
   (use tlex)
   (use ika)
   (use vmhack)
@@ -394,10 +395,24 @@
 (define *ika* #f)      ; last complied ika code. (used in test-taco3.scm)
 (define *verbose* #f)  ; compiler flag
 (define *show-prompt* #f) ; repl mode if #t
+
+(define make-lalr-token
+  (case (string->symbol (with-module lang.lalr.lalr *lalr-scm-version*))
+    ((2.4.1 2.5.0)
+     (lambda (tlex-token)
+       (let ((make-lexical-token   (with-module lang.lalr.lalr make-lexical-token))
+             (make-source-location (with-module lang.lalr.lalr make-source-location)))
+         (let ((loc (make-source-location #f #f #f -1 -1)))
+           (if (pair? tlex-token)
+             (make-lexical-token (car tlex-token) loc (cdr tlex-token))
+             (make-lexical-token tlex-token loc tlex-token))))))
+    ((2.1.0)
+     (lambda  (tlex-token) tlex-token))))
+
 (define (read-taco3)
   (call/cc (lambda (k)
              (set! return k)
-             (taco3-parser tlex error))))
+             (taco3-parser (lambda () (make-lalr-token (tlex))) error))))
 
 (define (taco3)
 
