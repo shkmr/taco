@@ -1,7 +1,7 @@
 (use gauche.test)
 (test-start "taco3")
 (use taco3)
-(test-module 'taco3)
+;(test-module 'taco3)
 
 (define taco.out (open-output-file "taco3.out"))
 
