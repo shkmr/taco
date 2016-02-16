@@ -397,16 +397,14 @@
 (define *show-prompt* #f) ; repl mode if #t
 
 (define make-lalr-token
-  (case (string->symbol (with-module lang.lalr.lalr *lalr-scm-version*))
-    ((2.4.1 2.5.0)
+  (case (lalr-version)
+    ((v2.4.1 v2.5.0)
      (lambda (tlex-token)
-       (let ((make-lexical-token   (with-module lang.lalr.lalr make-lexical-token))
-             (make-source-location (with-module lang.lalr.lalr make-source-location)))
-         (let ((loc (make-source-location #f #f #f -1 -1)))
-           (if (pair? tlex-token)
-             (make-lexical-token (car tlex-token) loc (cdr tlex-token))
-             (make-lexical-token tlex-token loc tlex-token))))))
-    ((2.1.0)
+       (let ((loc (make-source-location #f #f #f -1 -1)))
+         (if (pair? tlex-token)
+           (make-lexical-token (car tlex-token) loc (cdr tlex-token))
+           (make-lexical-token tlex-token loc tlex-token)))))
+    ((v2.1.0)
      (lambda  (tlex-token) tlex-token))))
 
 (define (read-taco3)

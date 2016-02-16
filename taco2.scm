@@ -450,8 +450,19 @@
 ;;;
 ;;;  API
 ;;;
+(define make-lalr-token
+  (case (lalr-version)
+    ((v2.4.1 v2.5.0)
+     (lambda (tlex-token)
+       (let ((loc (make-source-location #f #f #f -1 -1)))
+         (if (pair? tlex-token)
+           (make-lexical-token (car tlex-token) loc (cdr tlex-token))
+           (make-lexical-token tlex-token loc tlex-token)))))
+    ((v2.1.0)
+     (lambda  (tlex-token) tlex-token))))
+
 (define (taco2)
-  (taco2-parser tlex error))
+  (taco2-parser (lambda () (make-lalr-token (tlex))) error))
 
 (define (taco2-load file)       (with-input-from-file file taco2))
 (define (taco2-eval-string str) (with-input-from-string str taco2))
