@@ -173,11 +173,11 @@
   (let ((name     (car ika))
         (reqargs  (caadr ika))
         (optargs  (cadadr ika))
-        (arginfo  (get-keyword :arg-info (cadr ika) #f))
+        #;(arginfo  (get-keyword :arg-info (cadr ika) #f))
         (parent   (get-keyword :parent   (cadr ika) #f))
         (int-form (get-keyword :intermediate-form (cadr ika) #f)))
 
-    (let ((ccb (make-compiled-code-builder reqargs optargs name arginfo parent int-form))
+    (let ((ccb (make-compiled-code-builder reqargs optargs name #;arginfo parent int-form))
           (labels '()))
 
       (define (get-label-id label)
